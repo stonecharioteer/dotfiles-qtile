@@ -183,10 +183,23 @@ def screen(main=False):
     )
 
 
+def count_monitors():
+    import subprocess
+
+    try:
+        output = subprocess.check_output(["xrandr", "--query"]).decode()
+        monitors = [line for line in output.splitlines() if " connected" in line]
+        return len(monitors)
+    except Exception as e:
+        print(f"Error: {e}")
+        return 0
+
+
 screens = [
     screen(main=True),
-    screen(),
 ]
+for _ in range(count_monitors() - 1):
+    screens.append(screen())
 
 # Drag floating layouts.
 mouse = [
