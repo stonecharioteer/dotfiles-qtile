@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Qtile
+Comment=Qtile Session
+Exec=/opt/qtile/bin/qtile start
+Type=Application
+
