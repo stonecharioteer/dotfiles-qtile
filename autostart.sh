@@ -9,11 +9,6 @@ pgrep -x dunst > /dev/null || dunst &
 # TODO: Figure out how to customize laptop keyboard specifically
 # xmodmap ~/.Xmodmap
 setxkbmap -option caps:escape -option shift:both_capslock
-# select the default monitor setup
-# TODO: Select appropriate monitor setup
-autorandr -c
-# restore wallpaper
-nitrogen --restore &
 
 # start other background services
 xset r rate 200 35 &

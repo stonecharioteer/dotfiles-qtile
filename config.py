@@ -251,7 +251,6 @@ wmname = "LG3D"
 @hook.subscribe.startup_once
 def startup_once():
     """Starts the first time qtile starts, don't start this on every reload since some of the services shouldn't reload"""
-
     subprocess.call(os.path.expanduser("~/.config/qtile/autostart.sh"))
 
 
