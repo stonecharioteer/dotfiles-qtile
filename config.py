@@ -3,11 +3,11 @@
 See README.md for instructions
 """
 
-import subprocess
+import json
 import os
+import subprocess
 from libqtile import bar, layout, widget, hook
-from libqtile.config import Key, Group, Screen, Match
-from libqtile.config import Click, Drag
+from libqtile.config import Key, Group, Screen, Match, Click, Drag
 from libqtile.lazy import lazy
 
 colors = {
@@ -134,11 +134,44 @@ widget_defaults = dict(
 extension_defaults = widget_defaults.copy()
 
 
+def amdgpu_metadata():
+    """Retrieves the amdgpu metadata"""
+    output = subprocess.check_output(
+        "amdgpu_top -J -d".split(), stderr=subprocess.DEVNULL
+    )
+    return json.loads(output)
+
+
+def get_vram_usage():
+    data = amdgpu_metadata()
+    if not data:
+        return "GPU: N/A"
+
+    parts = []
+    for ix, gpu in enumerate(data):
+        name = gpu.get("DeviceName", "GPU")
+        if name == "AMD Radeon Graphics":
+            name = "On-Chip"
+        else:
+            name = name.replace("AMD Radeon", "").strip()
+
+        vram = gpu.get("VRAM", {})
+        total = vram.get("Total VRAM", {}).get("value")
+        used = vram.get("Total VRAM Usage", {}).get("value")
+        if total is not None and used is not None:
+            parts.append(f"[{name}]: {used}/{total} MiB")
+        else:
+            parts.append("[GPU]: N/A")
+    return "\n".join(parts)
+
+
 def sep():
+    """Returns a custom separator"""
     return widget.TextBox("⋮", foreground=colors["burgandy"], padding=10)
 
 
 def screen(main=False):
+    """Returns a default screen with a bar."""
     return Screen(
         top=bar.Bar(
             [
@@ -173,6 +206,9 @@ def screen(main=False):
                     tag_sensor="edge",
                     sensors_chip="amdgpu-pci-1800",
                 ),
+                widget.GenPollText(func=get_vram_usage, update_interval=3, fontsize=10)
+                if main
+                else widget.Spacer(length=1),
                 sep(),
                 widget.CPU(),
                 sep(),
@@ -192,8 +228,7 @@ def screen(main=False):
 
 
 def count_monitors():
-    import subprocess
-
+    """Returns the number of monitors"""
     try:
         output = subprocess.check_output(["xrandr", "--query"]).decode()
         monitors = [line for line in output.splitlines() if " connected" in line]
