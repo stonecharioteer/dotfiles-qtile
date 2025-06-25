@@ -3,6 +3,7 @@
 See README.md for instructions
 """
 
+import subprocess
 import os
 from libqtile import bar, layout, widget, hook
 from libqtile.config import Key, Group, Screen, Match
@@ -248,8 +249,13 @@ wmname = "LG3D"
 
 
 @hook.subscribe.startup_once
-def autostart():
+def startup_once():
     """Starts the first time qtile starts, don't start this on every reload since some of the services shouldn't reload"""
-    import subprocess
 
     subprocess.call(os.path.expanduser("~/.config/qtile/autostart.sh"))
+
+
+@hook.subscribe.startup
+def startup_always():
+    """Runs every time qtile is started/reloaded"""
+    subprocess.call(os.path.expanduser("~/.config/qtile/reload.sh"))
