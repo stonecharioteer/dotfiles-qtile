@@ -1,6 +1,8 @@
 # Qtile Dotfiles
 
 ```bash
+mkdir -p ~/Pictures/screenshots
+sudo apt install rofi
 sudo mkdir -p /opt/qtile
 sudo chown /opt/qtile stonecharioteer:stonecharioteer
 python -m venv /opt/qtile

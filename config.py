@@ -90,6 +90,13 @@ keys = [
         desc="App launcher",
     ),
     Key([mod], "period", lazy.next_screen(), desc="Focus next screen"),
+    # FIXME: Take screenshot by pressing Mod-PrintScr and save it to ~/Pictures/screenshots
+    Key(
+        [mod],
+        "Print",
+        lazy.spawn(os.path.expanduser("~/.config/qtile/install/rofi/screenshot.sh")),
+        desc="Screenshot",
+    ),
 ]
 
 groups = [Group(str(i)) for i in range(1, 10)]
