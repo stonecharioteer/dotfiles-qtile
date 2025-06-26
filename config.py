@@ -3,9 +3,11 @@
 See README.md for instructions
 """
 
+from __future__ import annotations
 import json
 import os
 import subprocess
+from libqtile.core.manager import Qtile
 from libqtile import bar, layout, widget, hook
 from libqtile.config import Key, Group, Screen, Match, Click, Drag
 from libqtile.lazy import lazy
@@ -24,6 +26,23 @@ images = {
 mod = "mod4"  # super key is modifier
 terminal = "alacritty"
 
+
+@lazy.function
+def move_mouse_to_next_monitor(qtile: Qtile):
+    """Moves the mouse position to the next screen by calculating the position of the centre of the screen."""
+    screen_count = len(qtile.screens)
+    current_screen = qtile.current_screen
+    current_index = next(
+        (i for i, s in enumerate(qtile.screens) if s == current_screen), 0
+    )
+    next_index = (current_index + 1) % screen_count
+    next_screen = qtile.screens[next_index]
+    x = next_screen.x + next_screen.width // 2
+    y = next_screen.y + next_screen.height // 2
+    qtile.core.warp_pointer(x, y)
+
+
+# keymaps
 keys = [
     # A list of available commands that can be bound to keys can be found
     # at https://docs.qtile.org/en/latest/manual/config/lazy.html
@@ -90,11 +109,11 @@ keys = [
         lazy.spawn("rofi -show combi -combi-modes 'window,ssh,drun'"),
         desc="App launcher",
     ),
-    Key([mod], "period", lazy.next_screen(), desc="Focus next screen"),
+    Key([mod], "period", move_mouse_to_next_monitor(), desc="Focus next screen"),
     # FIXME: Take screenshot by pressing Mod-PrintScr and save it to ~/Pictures/screenshots
     Key(
-        [mod],
-        "Print",
+        [mod, "shift"],
+        "p",
         lazy.spawn(os.path.expanduser("~/.config/qtile/install/rofi/screenshot.sh")),
         desc="Screenshot",
     ),
