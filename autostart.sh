@@ -6,6 +6,9 @@ pgrep -x picom >/dev/null || picom --config ~/.config/picom.conf &
 pgrep -x nm-applet >/dev/null || nm-applet &
 pgrep -x pasystray >/dev/null || pasystray &
 pgrep -x dunst >/dev/null || dunst &
+pgrep -x copyq >/dev/null || copyq &
+pgrep -x blueman-applet >/dev/null || blueman-applet &
+
 # keyboard customizations, only for the laptop
 # TODO: Figure out how to customize laptop keyboard specifically
 # xmodmap ~/.Xmodmap

@@ -110,12 +110,17 @@ keys = [
         desc="App launcher",
     ),
     Key([mod], "period", move_mouse_to_next_monitor(), desc="Focus next screen"),
-    # FIXME: Take screenshot by pressing Mod-PrintScr and save it to ~/Pictures/screenshots
     Key(
         [mod, "shift"],
         "p",
         lazy.spawn(os.path.expanduser("~/.config/qtile/install/rofi/screenshot.sh")),
         desc="Screenshot",
+    ),
+    Key(
+        [mod, "shift"],
+        "l",
+        lazy.spawn("cinnamon-screensaver-command --lock"),
+        desc="Lock screen",
     ),
 ]
 
@@ -191,59 +196,66 @@ def sep():
 
 def screen(main=False):
     """Returns a default screen with a bar."""
-    return Screen(
-        top=bar.Bar(
-            [
-                widget.Image(filename=images["linux-mint"], margin=5)
-                if main
-                else widget.Image(filename=images["python"], margin=5),
-                sep(),
-                # widget.Spacer(15),
-                widget.CurrentLayoutIcon(),
-                sep(),
-                widget.GroupBox(
-                    highlight_method="block",
-                    disable_drag=True,
-                ),
-                sep(),
-                widget.TaskList(
-                    stretch=True,
-                    highlight_method="block",
-                    max_title_width=250,
-                ),
-                sep(),
-                widget.Image(filename=images["cpu"], margin=8),
-                widget.ThermalSensor(
-                    format="{temp:.1f}{unit}",
-                    tag_sensor="Tctl",
-                    sensors_chip="k10temp-pci-00c3",
-                ),
-                sep(),
-                widget.Image(filename=images["gpu"], margin=5),
-                widget.ThermalSensor(
-                    format="{temp:.1f}{unit}",
-                    tag_sensor="edge",
-                    sensors_chip="amdgpu-pci-1800",
-                ),
-                widget.GenPollText(func=get_vram_usage, update_interval=3, fontsize=10)
-                if main
-                else widget.Spacer(length=1),
-                sep(),
-                widget.CPU(),
-                sep(),
-                widget.Image(filename=images["ram"], margin=5),
-                widget.Memory(),
-                sep() if main else widget.Spacer(length=1),
-                widget.Systray() if main else widget.Spacer(length=1),
-                sep(),
-                widget.Clock(format="[%Y-%m-%d %H:%M:%S]"),
-                sep(),
-                widget.Image(filename=images["straw-hat"]),
-            ],
-            36,
-            margin=5,
-        ),
+    bottom = bar.Bar(
+        [
+            widget.Image(filename=images["cpu"], margin=8),
+            widget.ThermalSensor(
+                format="{temp:.1f}{unit}",
+                tag_sensor="Tctl",
+                sensors_chip="k10temp-pci-00c3",
+            ),
+            sep(),
+            widget.Image(filename=images["gpu"], margin=5),
+            widget.ThermalSensor(
+                format="{temp:.1f}{unit}",
+                tag_sensor="edge",
+                sensors_chip="amdgpu-pci-1800",
+            ),
+            widget.GenPollText(func=get_vram_usage, update_interval=3, fontsize=10)
+            if main
+            else widget.Spacer(length=1),
+            sep(),
+            widget.CPU(),
+            sep(),
+            widget.Image(filename=images["ram"], margin=5),
+            widget.Memory(),
+            widget.Spacer(stretch=True),
+            widget.Clock(format="[%Y-%m-%d %H:%M:%S]"),
+        ],
+        36,
+        margin=5,
     )
+    top = bar.Bar(
+        [
+            widget.Image(filename=images["linux-mint"], margin=5)
+            if main
+            else widget.Image(filename=images["python"], margin=5),
+            sep(),
+            # widget.Spacer(15),
+            widget.CurrentLayoutIcon(),
+            sep(),
+            widget.GroupBox(
+                highlight_method="block",
+                disable_drag=True,
+            ),
+            sep(),
+            widget.TaskList(
+                stretch=True,
+                highlight_method="block",
+                max_title_width=250,
+            ),
+            sep() if main else widget.Spacer(length=1),
+            widget.Systray() if main else widget.Spacer(length=1),
+            sep(),
+            widget.Image(filename=images["straw-hat"]),
+        ],
+        36,
+        margin=5,
+    )
+    if main:
+        return Screen(top=top, bottom=bottom)
+    else:
+        return Screen(top=top)
 
 
 def count_monitors():
