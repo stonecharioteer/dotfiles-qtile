@@ -14,7 +14,13 @@ from libqtile.lazy import lazy
 
 colors = {
     "burgandy": "#b84d57",
+    "midnight": "#1e2030",
+    "light_blue_grey": "#d6dae8",
+    "light_blue": "#8fafc7",
+    "dark_slate_blue": "#2e3448"
 }
+colors["sys_tray"] = colors["dark_slate_blue"]
+colors["bar"] = colors["dark_slate_blue"]
 images = {
     "python": os.path.expanduser("~/.config/qtile/assets/python-logo-only.svg"),
     "straw-hat": os.path.expanduser("~/.config/qtile/assets/strawhat.png"),
@@ -189,42 +195,65 @@ def get_vram_usage():
     return "\n".join(parts)
 
 
-def sep():
+def sep(*,foreground=colors["burgandy"], background=None):
     """Returns a custom separator"""
-    return widget.TextBox("⋮", foreground=colors["burgandy"], padding=10)
+    if background:
+        return widget.TextBox("⋮", foreground=foreground, background=background,padding=10)
+    else:
+        return widget.TextBox("⋮", foreground=foreground, padding=10)
+
+
+def has_battery():
+    """Check if the system has a battery"""
+    import glob
+    return bool(glob.glob("/sys/class/power_supply/BAT*"))
 
 
 def screen(main=False):
     """Returns a default screen with a bar."""
-    bottom = bar.Bar(
-        [
-            widget.Image(filename=images["cpu"], margin=8),
-            widget.ThermalSensor(
-                format="{temp:.1f}{unit}",
-                tag_sensor="Tctl",
-                sensors_chip="k10temp-pci-00c3",
+    bottom_widgets = [
+        widget.Image(filename=images["cpu"], margin=8),
+        widget.ThermalSensor(
+            format="{temp:.1f}{unit}",
+            tag_sensor="Tctl",
+            sensors_chip="k10temp-pci-00c3",
+        ),
+        sep(),
+        widget.Image(filename=images["gpu"], margin=5),
+        widget.ThermalSensor(
+            format="{temp:.1f}{unit}",
+            tag_sensor="edge",
+            sensors_chip="amdgpu-pci-1800",
+        ),
+        widget.GenPollText(func=get_vram_usage, update_interval=3, fontsize=10)
+        if main
+        else widget.Spacer(length=1),
+        sep(),
+        widget.CPU(),
+        sep(),
+        widget.Image(filename=images["ram"], margin=5),
+        widget.Memory(),
+    ]
+    
+    # Add battery widget if battery is detected
+    if has_battery():
+        bottom_widgets.extend([
+            sep(),
+            widget.Battery(
+                format="{char} {percent:2.0%}",
+                charge_char="⚡",
+                discharge_char="🔌",
+                low_percentage=0.3,
+                low_foreground="ff0000",
             ),
-            sep(),
-            widget.Image(filename=images["gpu"], margin=5),
-            widget.ThermalSensor(
-                format="{temp:.1f}{unit}",
-                tag_sensor="edge",
-                sensors_chip="amdgpu-pci-1800",
-            ),
-            widget.GenPollText(func=get_vram_usage, update_interval=3, fontsize=10)
-            if main
-            else widget.Spacer(length=1),
-            sep(),
-            widget.CPU(),
-            sep(),
-            widget.Image(filename=images["ram"], margin=5),
-            widget.Memory(),
-            widget.Spacer(stretch=True),
-            widget.Clock(format="[%Y-%m-%d %H:%M:%S]"),
-        ],
-        36,
-        margin=5,
-    )
+        ])
+    
+    bottom_widgets.extend([
+        widget.Spacer(stretch=True),
+        widget.Clock(format="[%Y-%m-%d %H:%M:%S]"),
+    ])
+    
+    bottom = bar.Bar(bottom_widgets, 36, margin=5, background=colors["bar"])
     top = bar.Bar(
         [
             widget.Image(filename=images["linux-mint"], margin=5)
@@ -237,6 +266,7 @@ def screen(main=False):
             widget.GroupBox(
                 highlight_method="block",
                 disable_drag=True,
+                hide_unused=True,
             ),
             sep(),
             widget.TaskList(
@@ -244,13 +274,14 @@ def screen(main=False):
                 highlight_method="block",
                 max_title_width=250,
             ),
-            sep() if main else widget.Spacer(length=1),
-            widget.Systray() if main else widget.Spacer(length=1),
+            sep(background=colors["sys_tray"]) if main else widget.Spacer(length=1),
+            widget.Systray(background=colors["sys_tray"]) if main else widget.Spacer(length=1),
             sep(),
             widget.Image(filename=images["straw-hat"]),
         ],
         36,
         margin=5,
+        background=colors["bar"],
     )
     if main:
         return Screen(top=top, bottom=bottom)
