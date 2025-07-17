@@ -128,6 +128,12 @@ keys = [
         lazy.spawn("cinnamon-screensaver-command --lock"),
         desc="Lock screen",
     ),
+    Key(
+        [mod, "shift"],
+        "e",
+        lazy.spawn(os.path.expanduser("~/.config/qtile/install/rofi/powermenu.sh")),
+        desc="Power menu",
+    ),
 ]
 
 groups = [Group(str(i)) for i in range(1, 10)]
