@@ -75,5 +75,34 @@ NEVER proactively create documentation files (*.md) or README files. Only create
 - Changed battery widget low_percentage from 0.2 to 0.3 to align with battery monitor script
 - Added midnight background (#1e2030) to bars and light blue background (#8fafc7) for systray to provide better contrast against black icons while complementing the color scheme
 
+### 2025-07-17
+- Implemented intelligent laptop sleep functionality:
+  - Created `monitor-aware-suspend.sh` script that prevents suspend when external monitors are connected
+  - Added `suspend-lock.sh` script for screen locking before suspend and post-suspend actions
+  - Created systemd user services `lock-on-suspend.service` and `unlock-on-resume.service`
+  - Updated `autostart.sh` to enable suspend services automatically
+  - Sleep behavior: lid close → suspend only when using laptop screen alone, continue working when external monitor connected
+  - Automatic screen lock using cinnamon-screensaver before suspend
+  - Logging to ~/.cache/qtile-suspend.log for debugging
+
 ### Refactoring and Homogenization
 - I'd like to homogenize things across scripts, so if something seems common between scripts and config.py, ensure that it is maintained so
+
+### Sleep Functionality Setup
+To enable the sleep functionality, you need to create the system-level logind configuration:
+
+```bash
+# Create system logind configuration (requires sudo)
+sudo mkdir -p /etc/systemd/logind.conf.d
+sudo tee /etc/systemd/logind.conf.d/lid-suspend.conf << 'EOF'
+[Login]
+HandleLidSwitch=suspend
+HandleLidSwitchDocked=ignore
+HandleLidSwitchExternalPower=suspend
+EOF
+
+# Restart logind to apply changes
+sudo systemctl restart systemd-logind
+```
+
+The user-level services are automatically enabled via autostart.sh on qtile startup.

@@ -18,4 +18,8 @@ setxkbmap -option caps:escape -option shift:both_capslock
 xset r rate 200 35 &
 xset s off -dpms &
 
+# enable suspend lock services
+systemctl --user enable lock-on-suspend.service
+systemctl --user enable unlock-on-resume.service
+
 notify-send "Qtile" "Config loaded successfully." -u low 2>/dev/null

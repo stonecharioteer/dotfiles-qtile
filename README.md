@@ -34,3 +34,32 @@ The script will send notifications when:
 - Battery drops below 15% (critical battery warning)
 
 Note: Notifications only appear when the battery is discharging (not while charging).
+
+### Sleep Functionality (Laptops Only)
+Configure intelligent laptop suspend that only triggers when using laptop screen alone:
+
+```bash
+# Run the setup script to configure system-level settings
+./install/setup-sleep-functionality.sh
+```
+
+This will:
+- Configure systemd-logind to handle lid switch events
+- Enable automatic screen locking before suspend
+- Set up monitor-aware suspend (prevents suspend when external monitor connected)
+
+**Sleep Behavior:**
+- **Lid close with laptop screen only** → suspend + lock screen
+- **Lid close with external monitor** → no suspend (notification shown)
+- **Wake from suspend** → unlock screen to continue
+
+**Manual Testing:**
+```bash
+# Test monitor detection
+./install/monitor-aware-suspend.sh check
+
+# Test screen locking
+./install/suspend-lock.sh lock
+```
+
+**Logs:** Check `~/.cache/qtile-suspend.log` for suspend/resume activity debugging.
