@@ -22,4 +22,7 @@ xset s off -dpms &
 systemctl --user enable lock-on-suspend.service
 systemctl --user enable unlock-on-resume.service
 
+# enable touchpad gestures (start client to connect to daemon)
+pgrep -f "touchegg$" >/dev/null || touchegg &
+
 notify-send "Qtile" "Config loaded successfully." -u low 2>/dev/null

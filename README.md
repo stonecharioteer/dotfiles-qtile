@@ -63,3 +63,34 @@ This will:
 ```
 
 **Logs:** Check `~/.cache/qtile-suspend.log` for suspend/resume activity debugging.
+
+### Touchpad Gestures (Laptops Only)
+Configure Mac-like touchpad gestures for pinch zoom and browser navigation:
+
+```bash
+# Run the setup script to configure touchpad gestures
+./install/setup-touchpad.sh
+```
+
+This will:
+- Enable pinch-to-zoom gestures in all applications
+- Enable 2-finger horizontal swipe for browser back/forward navigation
+- Configure X11 touchpad settings for optimal gesture recognition
+
+**Gesture Functionality:**
+- **2-finger pinch in/out** → Zoom in/out (Ctrl+Plus/Minus)
+- **2-finger swipe right** → Browser back (Alt+Left)
+- **2-finger swipe left** → Browser forward (Alt+Right)
+
+**Important:** You need to restart your X11 session (log out and back in) for touchpad configuration changes to take effect.
+
+**Testing:**
+```bash
+# Check touchegg service status
+systemctl status touchegg.service
+
+# Or check if touchegg daemon is running
+pgrep -x touchegg
+
+# Test in a web browser - try pinch gestures and horizontal swipes
+```
