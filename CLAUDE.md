@@ -106,3 +106,15 @@ sudo systemctl restart systemd-logind
 ```
 
 The user-level services are automatically enabled via autostart.sh on qtile startup.
+
+### 2025-07-17 (Session 2)
+- Implemented Mac-like touchpad gestures:
+  - Created `install/touchegg.conf` with pinch zoom and horizontal swipe gestures
+  - 2-finger pinch in/out → Ctrl+Plus/Minus for zoom functionality
+  - 2-finger horizontal swipe → Alt+Left/Right for browser navigation
+  - Created `install/40-libinput-touchpad.conf` for X11 touchpad settings
+  - Maintained existing scroll direction, only focused on requested gestures
+  - Created `install/setup-touchpad.sh` script for automated installation
+  - Updated `autostart.sh` to start touchegg service automatically
+  - Updated `README.md` with touchpad setup instructions
+  - All configuration files stored in ./install/ for easy reinstallation
