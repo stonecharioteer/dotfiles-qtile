@@ -215,6 +215,30 @@ def has_battery():
     return bool(glob.glob("/sys/class/power_supply/BAT*"))
 
 
+def get_ip_address():
+    """Get the current IP address from WiFi or Ethernet connection"""
+    import subprocess
+    import re
+    
+    try:
+        # Get IP from active network interfaces (excluding loopback)
+        result = subprocess.run(['ip', 'route', 'get', '8.8.8.8'], 
+                              capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            # Extract IP from output like "8.8.8.8 via 192.168.1.1 dev wlan0 src 192.168.1.100"
+            match = re.search(r'src\s+(\d+\.\d+\.\d+\.\d+)', result.stdout)
+            if match:
+                ip = match.group(1)
+                # Get interface name
+                dev_match = re.search(r'dev\s+(\w+)', result.stdout)
+                interface = dev_match.group(1) if dev_match else "unknown"
+                return f"IP: {ip} ({interface})"
+        
+        return "IP: No connection"
+    except Exception:
+        return "IP: Error"
+
+
 def screen(main=False):
     """Returns a default screen with a bar."""
     bottom_widgets = [
@@ -252,6 +276,13 @@ def screen(main=False):
                 low_percentage=0.3,
                 low_foreground="ff0000",
             ),
+        ])
+    
+    # Add IP address widget only for main screen
+    if main:
+        bottom_widgets.extend([
+            sep(),
+            widget.GenPollText(func=get_ip_address, update_interval=300, fontsize=12),
         ])
     
     bottom_widgets.extend([
