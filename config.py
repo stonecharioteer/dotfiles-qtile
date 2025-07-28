@@ -134,6 +134,12 @@ keys = [
         lazy.spawn(os.path.expanduser("~/.config/qtile/install/rofi/powermenu.sh")),
         desc="Power menu",
     ),
+    Key(
+        [mod, "shift"],
+        "n",
+        lazy.spawn(os.path.expanduser("~/.config/qtile/install/rofi/notification-history.sh")),
+        desc="Notification history",
+    ),
 ]
 
 groups = [Group(str(i)) for i in range(1, 10)]

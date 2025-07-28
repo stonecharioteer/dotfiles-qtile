@@ -25,4 +25,7 @@ systemctl --user enable unlock-on-resume.service
 # enable touchpad gestures (start client to connect to daemon)
 pgrep -f "touchegg$" >/dev/null || touchegg &
 
+# Start Conky in the background after a delay
+pgrep -x conky >/dev/null || (conky | logger -t conky) &
+
 notify-send "Qtile" "Config loaded successfully." -u low 2>/dev/null
