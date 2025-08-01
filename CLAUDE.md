@@ -22,7 +22,10 @@ NEVER proactively create documentation files (*.md) or README files. Only create
 - **`screen(main=False)`**: Factory function for creating screen configurations with conditional widget placement
 - **`count_monitors()`**: Runtime monitor detection using `xrandr`
 - **`has_battery()`**: System capability detection for battery-dependent features
+- **`has_asus_keyboard()`**: Laptop detection for tablet mode functionality
+- **`multimedia_cmd()`**: Helper function for multimedia commands with notifications
 - **`sep()`**: Consistent separator widget factory using burgundy color theme
+- **`TabletModeToggle`**: Class for managing keyboard/touchpad disable functionality
 
 ### Widget Organization Strategy
 - **Top bar**: Navigation, branding, system tray
@@ -45,6 +48,8 @@ NEVER proactively create documentation files (*.md) or README files. Only create
 ### Script Organization in install/
 - **Configuration files**: `picom.conf`, `rofi/config.rasi`, `qtile.desktop`
 - **Utility scripts**: `battery-monitor.sh`, `redshift/gamma.sh`, `rofi/screenshot.sh`
+- **Auto-rotation system**: `auto-rotate/auto-rotate.sh`, `auto-rotate.service`, `reset-touch.sh`
+- **Setup scripts**: `setup-brightness-permissions.sh`, `setup-touchpad.sh`
 - **Integration pattern**: Self-contained scripts for system-wide functionality
 
 ### Conditional Functionality Patterns
@@ -118,3 +123,40 @@ The user-level services are automatically enabled via autostart.sh on qtile star
   - Updated `autostart.sh` to start touchegg service automatically
   - Updated `README.md` with touchpad setup instructions
   - All configuration files stored in ./install/ for easy reinstallation
+
+### 2025-08-01
+- Implemented comprehensive multimedia key support:
+  - Added `multimedia_cmd()` helper function for consistent command execution and notifications
+  - Implemented audio controls: XF86AudioMute, XF86AudioLowerVolume, XF86AudioRaiseVolume
+  - Added microphone mute support: F20 key binding for pactl source mute toggle
+  - Created brightness controls for screen (nvidia_0) and keyboard backlight (asus::kbd_backlight)
+  - Added launcher shortcuts: XF86Launch3 (rofi drun), XF86Launch4 (rofi window)
+  - Implemented progress bar notifications using dunstify with notification ID 9991
+  - Prevents notification spam by updating single notification for volume changes
+  - Enhanced UX with proper status messages: "Muted/Unmuted" instead of "yes/no"
+  - Created `install/setup-brightness-permissions.sh` for udev rules and permissions
+  - All multimedia keys provide visual feedback with appropriate emoji icons
+- Enhanced tablet mode integration:
+  - Added laptop screen rotation detection and touch input transformation
+  - Implemented manual tablet mode toggle button in qtile top bar (💻/📱)
+  - Created auto-rotation service with systemd integration
+  - Support for touchscreen, stylus, and touchpad rotation matrices
+  - Tablet mode disables keyboard/touchpad, enables touch-only interaction
+
+## Gameplan / Todo Items
+
+### Multimedia Key Improvements
+- [ ] **Fix existing multimedia button support** - Address any issues with current audio/brightness key bindings
+- [ ] **Add fan speed curve cycling** - Detect and bind laptop fan speed control buttons to cycle through performance profiles
+- [ ] **Enhanced keyboard backlight controls** - Implement dedicated keyboard backlight up/down buttons (separate from existing brightness controls)
+
+### Notification System Enhancements
+- [ ] **Dynamic dunst notification scaling** - Implement screen-size aware notification scaling that works properly on both laptop and desktop displays
+  - Detect screen resolution/DPI and adjust notification font size accordingly
+  - Ensure notifications are appropriately sized for different screen sizes
+  - Consider using xrandr or similar for runtime display detection
+
+### Hardware Integration
+- [ ] **ASUS ROG laptop-specific controls** - Research and implement laptop-specific function key mappings
+- [ ] **Performance profile integration** - Connect fan curves to system performance modes if available
+- [ ] **Advanced power management** - Integrate fan controls with existing battery monitoring system
