@@ -33,6 +33,49 @@ mod = "mod4"  # super key is modifier
 terminal = "alacritty"
 
 
+def multimedia_cmd(command, notification_title, notification_body=None, get_status_cmd=None):
+    """Execute multimedia command and show notification with current status"""
+    def execute():
+        try:
+            # Execute the main command
+            subprocess.run(command, shell=True, check=True, capture_output=True)
+            
+            # Get current status if status command provided
+            if get_status_cmd:
+                try:
+                    result = subprocess.run(get_status_cmd, shell=True, capture_output=True, text=True, timeout=2)
+                    if result.returncode == 0:
+                        status = result.stdout.strip()
+                        body = f"{notification_body}: {status}" if notification_body else status
+                    else:
+                        body = notification_body or "Status updated"
+                except Exception:
+                    body = notification_body or "Status updated"
+            else:
+                body = notification_body or "Action completed"
+            
+            # Show notification
+            subprocess.run([
+                "notify-send", 
+                "-t", "1500",  # 1.5 second timeout
+                "-u", "low",   # low urgency
+                notification_title,
+                body
+            ], capture_output=True)
+            
+        except Exception as e:
+            # Show error notification
+            subprocess.run([
+                "notify-send", 
+                "-t", "2000", 
+                "-u", "critical",
+                "Error",
+                f"Failed to execute {notification_title}: {str(e)}"
+            ], capture_output=True)
+    
+    return execute
+
+
 @lazy.function
 def move_mouse_to_next_monitor(qtile: Qtile):
     """Moves the mouse position to the next screen by calculating the position of the centre of the screen."""
@@ -134,6 +177,49 @@ keys = [
         lazy.spawn(os.path.expanduser("~/.config/qtile/install/rofi/powermenu.sh")),
         desc="Power menu",
     ),
+    
+    # Test key binding - use a regular key we know works
+    Key([mod], "F1", lazy.spawn("notify-send 'Key Test' 'Mod+F1 pressed - key bindings work'"), desc="Test key binding"),
+    
+    # Multimedia keys with notifications - try actual detected keys
+    Key([], "XF86AudioMute", lazy.spawn("sh -c 'pactl set-sink-mute @DEFAULT_SINK@ toggle; mute_status=$(pactl get-sink-mute @DEFAULT_SINK@ | cut -d\" \" -f2); if [ \"$mute_status\" = \"yes\" ]; then dunstify -a \"volume\" -u low -r 9991 \"🔇 Audio\" \"Muted\"; else volume=$(pactl get-sink-volume @DEFAULT_SINK@ | head -1 | cut -d\"/\" -f2 | tr -d \" %\"); dunstify -a \"volume\" -u low -r 9991 -h int:value:\"$volume\" \"🔊 Audio\" \"Unmuted - $volume%\"; fi'"), desc="Toggle mute"),
+    Key([], "XF86AudioLowerVolume", lazy.spawn("sh -c 'pactl set-sink-volume @DEFAULT_SINK@ -5%; volume=$(pactl get-sink-volume @DEFAULT_SINK@ | head -1 | cut -d\"/\" -f2 | tr -d \" %\"); dunstify -a \"volume\" -u low -r 9991 -h int:value:\"$volume\" \"🔉 Volume\" \"$volume%\"'"), desc="Lower volume"),
+    Key([], "XF86AudioRaiseVolume", lazy.spawn("sh -c 'pactl set-sink-volume @DEFAULT_SINK@ +5%; volume=$(pactl get-sink-volume @DEFAULT_SINK@ | head -1 | cut -d\"/\" -f2 | tr -d \" %\"); dunstify -a \"volume\" -u low -r 9991 -h int:value:\"$volume\" \"🔊 Volume\" \"$volume%\"'"), desc="Raise volume"),
+    Key([], "F20", lazy.spawn("sh -c 'pactl set-source-mute @DEFAULT_SOURCE@ toggle; mic_status=$(pactl get-source-mute @DEFAULT_SOURCE@ | cut -d\" \" -f2); if [ \"$mic_status\" = \"yes\" ]; then notify-send \"🎤 Microphone\" \"Muted\"; else notify-send \"🎤 Microphone\" \"Unmuted\"; fi'"), desc="Toggle microphone mute"),
+    Key([], "XF86MonBrightnessDown", lazy.function(multimedia_cmd(
+        "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); new=$((current - max/20)); [ $new -lt 0 ] && new=0; echo $new > /sys/class/backlight/nvidia_0/brightness'",
+        "🔅 Brightness",
+        "Screen brightness",
+        "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); echo \"$((current * 100 / max))%\"'"
+    )), desc="Lower screen brightness"),
+    Key([], "XF86MonBrightnessUp", lazy.function(multimedia_cmd(
+        "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); new=$((current + max/20)); [ $new -gt $max ] && new=$max; echo $new > /sys/class/backlight/nvidia_0/brightness'",
+        "🔆 Brightness",
+        "Screen brightness", 
+        "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); echo \"$((current * 100 / max))%\"'"
+    )), desc="Raise screen brightness"),
+    Key([], "XF86KbdBrightnessDown", lazy.function(multimedia_cmd(
+        "bash -c 'current=$(cat /sys/class/leds/asus::kbd_backlight/brightness); new=$((current - 1)); [ $new -lt 0 ] && new=0; echo $new > /sys/class/leds/asus::kbd_backlight/brightness'",
+        "⌨️ Keyboard",
+        "Backlight",
+        "bash -c 'echo \"Level $(cat /sys/class/leds/asus::kbd_backlight/brightness)\"'"
+    )), desc="Lower keyboard backlight"),
+    Key([], "XF86KbdBrightnessUp", lazy.function(multimedia_cmd(
+        "bash -c 'current=$(cat /sys/class/leds/asus::kbd_backlight/brightness); max=$(cat /sys/class/leds/asus::kbd_backlight/max_brightness); new=$((current + 1)); [ $new -gt $max ] && new=$max; echo $new > /sys/class/leds/asus::kbd_backlight/brightness'",
+        "⌨️ Keyboard",
+        "Backlight",
+        "bash -c 'echo \"Level $(cat /sys/class/leds/asus::kbd_backlight/brightness)\"'"
+    )), desc="Raise keyboard backlight"),
+    Key([], "XF86Launch3", lazy.function(multimedia_cmd(
+        "rofi -show drun",
+        "🚀 Launcher",
+        "Application menu opened"
+    )), desc="Launch application menu"),
+    Key([], "XF86Launch4", lazy.function(multimedia_cmd(
+        "rofi -show window",
+        "🪟 Windows",
+        "Window switcher opened"
+    )), desc="Show window switcher"),
 ]
 
 groups = [Group(str(i)) for i in range(1, 10)]
