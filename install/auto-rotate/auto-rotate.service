@@ -1,0 +1,15 @@
+[Unit]
+Description=Auto-rotate display and touch inputs based on accelerometer
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.config/qtile/install/auto-rotate/auto-rotate.sh
+Restart=always
+RestartSec=5
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=%h/.Xauthority
+
+[Install]
+WantedBy=default.target

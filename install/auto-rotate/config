@@ -1,0 +1,6 @@
+# Auto-rotate configuration file
+# Set to true to attempt enabling laptop display when rotation is requested
+ENABLE_LAPTOP_DISPLAY=true
+
+# Set to true to allow rotation of external displays (not recommended for desktop monitors)
+ROTATE_EXTERNAL_DISPLAYS=true

@@ -25,4 +25,7 @@ systemctl --user enable unlock-on-resume.service
 # enable touchpad gestures (start client to connect to daemon)
 pgrep -f "touchegg$" >/dev/null || touchegg &
 
+# enable auto-rotation service (setup via install/auto-rotate/setup.sh)
+systemctl --user start auto-rotate.service 2>/dev/null || true
+
 notify-send "Qtile" "Config loaded successfully." -u low 2>/dev/null
