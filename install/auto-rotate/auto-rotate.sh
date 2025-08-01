@@ -64,7 +64,10 @@ get_rotatable_display() {
 
 # Function to get touch devices
 get_touch_devices() {
+    # Get touchpad, stylus, and touchscreen devices
     xinput list --name-only | grep -iE "touch|finger|wacom|stylus" | head -5
+    # Also get the ELAN9008 touchscreen device (without "Stylus" in name)
+    xinput list --name-only | grep "ELAN9008:00 04F3:2C82$" | head -1
 }
 
 # Function to rotate display
@@ -131,11 +134,14 @@ rotate_touch_inputs() {
     # Apply transformation to all touch devices
     while IFS= read -r device; do
         if [ -n "$device" ]; then
-            xinput set-prop "$device" "Coordinate Transformation Matrix" $matrix 2>/dev/null
-            if [ $? -eq 0 ]; then
-                log_message "Rotated touch device: $device"
+            # Try standard Coordinate Transformation Matrix first
+            if xinput set-prop "$device" "Coordinate Transformation Matrix" $matrix 2>/dev/null; then
+                log_message "Rotated touch device: $device (standard matrix)"
+            # If that fails, try libinput Calibration Matrix (for stylus devices)
+            elif xinput set-prop "$device" "libinput Calibration Matrix" $matrix 2>/dev/null; then
+                log_message "Rotated touch device: $device (libinput matrix)"
             else
-                log_message "Failed to rotate touch device: $device"
+                log_message "Failed to rotate touch device: $device (no compatible matrix property)"
             fi
         fi
     done < <(get_touch_devices)

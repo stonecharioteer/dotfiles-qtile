@@ -215,6 +215,86 @@ def has_battery():
     return bool(glob.glob("/sys/class/power_supply/BAT*"))
 
 
+def has_asus_keyboard():
+    """Check if Asus Keyboard is detected (laptop mode)"""
+    try:
+        result = subprocess.run(['xinput', 'list', '--name-only'], 
+                              capture_output=True, text=True, timeout=5)
+        return "Asus Keyboard" in result.stdout
+    except Exception:
+        return False
+
+
+class TabletModeToggle:
+    """Manages tablet mode toggle state"""
+    def __init__(self):
+        self.tablet_mode = False
+        self.keyboard_ids = []
+        self.touchpad_id = None
+        self._find_devices()
+    
+    def _find_devices(self):
+        """Find keyboard and touchpad device IDs"""
+        try:
+            result = subprocess.run(['xinput', 'list'], 
+                                  capture_output=True, text=True, timeout=5)
+            for line in result.stdout.splitlines():
+                if "Asus Keyboard" in line and "id=" in line:
+                    # Extract ID from line like "Asus Keyboard    id=11    [slave  keyboard (3)]"
+                    import re
+                    match = re.search(r'id=(\d+)', line)
+                    if match:
+                        self.keyboard_ids.append(int(match.group(1)))
+                elif "ELAN1201:00 04F3:3098 Touchpad" in line and "id=" in line:
+                    import re
+                    match = re.search(r'id=(\d+)', line)
+                    if match:
+                        self.touchpad_id = int(match.group(1))
+        except Exception as e:
+            print(f"Error finding input devices: {e}")
+    
+    def toggle(self):
+        """Toggle tablet mode on/off"""
+        self.tablet_mode = not self.tablet_mode
+        
+        if self.tablet_mode:
+            # Disable keyboard and touchpad
+            for kbd_id in self.keyboard_ids:
+                subprocess.run(['xinput', 'disable', str(kbd_id)], 
+                             capture_output=True)
+            if self.touchpad_id:
+                subprocess.run(['xinput', 'disable', str(self.touchpad_id)], 
+                             capture_output=True)
+        else:
+            # Enable keyboard and touchpad
+            for kbd_id in self.keyboard_ids:
+                subprocess.run(['xinput', 'enable', str(kbd_id)], 
+                             capture_output=True)
+            if self.touchpad_id:
+                subprocess.run(['xinput', 'enable', str(self.touchpad_id)], 
+                             capture_output=True)
+    
+    def get_status_text(self):
+        """Get current status text for the button"""
+        return "📱" if self.tablet_mode else "💻"
+
+
+# Global tablet mode toggle instance
+tablet_toggle = TabletModeToggle()
+
+
+@lazy.function
+def toggle_tablet_mode(qtile):
+    """Toggle tablet mode and update widget"""
+    tablet_toggle.toggle()
+    # Update the widget text
+    for screen in qtile.screens:
+        if hasattr(screen, 'top') and screen.top:
+            for widget in screen.top.widgets:
+                if hasattr(widget, 'name') and widget.name == 'tablet_toggle':
+                    widget.update(tablet_toggle.get_status_text())
+
+
 def get_ip_address():
     """Get the current IP address from WiFi or Ethernet connection"""
     import subprocess
@@ -311,6 +391,15 @@ def screen(main=False):
                 highlight_method="block",
                 max_title_width=250,
             ),
+            sep() if main and has_asus_keyboard() else widget.Spacer(length=1),
+            # Add tablet mode toggle button only on laptop with main screen
+            widget.TextBox(
+                text=tablet_toggle.get_status_text(),
+                name="tablet_toggle",
+                mouse_callbacks={"Button1": toggle_tablet_mode},
+                fontsize=20,
+                padding=8,
+            ) if main and has_asus_keyboard() else widget.Spacer(length=1),
             sep(background=colors["sys_tray"]) if main else widget.Spacer(length=1),
             widget.Systray(background=colors["sys_tray"]) if main else widget.Spacer(length=1),
             sep(),

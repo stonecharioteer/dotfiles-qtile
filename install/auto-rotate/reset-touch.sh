@@ -11,9 +11,21 @@ if xinput list --name-only | grep -q "ELAN1201:00 04F3:3098 Touchpad"; then
     echo "✓ Reset touchpad"
 fi
 
-# Reset stylus
+# Reset touchscreen 
+if xinput list --name-only | grep -q "ELAN9008:00 04F3:2C82$"; then
+    xinput set-prop "ELAN9008:00 04F3:2C82" "Coordinate Transformation Matrix" 1 0 0 0 1 0 0 0 1
+    echo "✓ Reset touchscreen"
+fi
+
+# Reset stylus (try both matrix types)
 if xinput list --name-only | grep -q "ELAN9008:00 04F3:2C82 Stylus"; then
-    xinput set-prop "ELAN9008:00 04F3:2C82 Stylus" "Coordinate Transformation Matrix" 1 0 0 0 1 0 0 0 1 2>/dev/null || echo "⚠ Could not reset stylus"
+    if xinput set-prop "ELAN9008:00 04F3:2C82 Stylus" "Coordinate Transformation Matrix" 1 0 0 0 1 0 0 0 1 2>/dev/null; then
+        echo "✓ Reset stylus (standard matrix)"
+    elif xinput set-prop "ELAN9008:00 04F3:2C82 Stylus" "libinput Calibration Matrix" 1 0 0 0 1 0 0 0 1 2>/dev/null; then
+        echo "✓ Reset stylus (libinput matrix)"
+    else
+        echo "⚠ Could not reset stylus"
+    fi
 fi
 
 # Reset any other touch devices
