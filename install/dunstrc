@@ -45,14 +45,15 @@
     dmenu = /usr/bin/dmenu -p dunst:
     browser = /usr/bin/xdg-open
     always_run_script = true
+    script = /home/stonecharioteer/.config/qtile/install/dunst-action-handler.sh
     title = Dunst
     class = Dunst
     corner_radius = 8
     ignore_dbusclose = false
     force_xwayland = false
     force_xinerama = false
-    mouse_left_click = close_current
-    mouse_middle_click = do_action, close_current
+    mouse_left_click = do_action, close_current
+    mouse_middle_click = close_current
     mouse_right_click = close_all
 
 [experimental]
