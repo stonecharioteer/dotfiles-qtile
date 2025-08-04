@@ -29,4 +29,7 @@ pgrep -f "touchegg$" >/dev/null || touchegg &
 export ACTIVE_INTERFACE=$(ip route get 8.8.8.8 | awk '{print $5}')
 pgrep -x conky >/dev/null || (conky | logger -t conky) &
 
+# enable auto-rotation service (setup via install/auto-rotate/setup.sh)
+systemctl --user start auto-rotate.service 2>/dev/null || true
+
 notify-send "Qtile" "Config loaded successfully." -u low 2>/dev/null
