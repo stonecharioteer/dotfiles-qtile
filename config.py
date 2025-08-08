@@ -177,6 +177,12 @@ keys = [
         lazy.spawn(os.path.expanduser("~/.config/qtile/install/rofi/powermenu.sh")),
         desc="Power menu",
     ),
+    Key(
+        [mod, "shift"],
+        "m",
+        lazy.spawn(os.path.expanduser("~/.config/qtile/install/monitor-manager/monitor-menu.sh")),
+        desc="Monitor configuration menu",
+    ),
     
     # Test key binding - use a regular key we know works
     Key([mod], "F1", lazy.spawn("notify-send 'Key Test' 'Mod+F1 pressed - key bindings work'"), desc="Test key binding"),

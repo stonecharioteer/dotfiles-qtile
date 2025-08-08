@@ -1,0 +1,14 @@
+[Unit]
+Description=Monitor Manager - Interactive display configuration
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.config/qtile/install/monitor-manager/monitor-manager.sh
+Restart=on-failure
+RestartSec=5
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=default.target
