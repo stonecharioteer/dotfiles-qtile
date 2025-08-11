@@ -559,6 +559,7 @@ floating_layout = layout.Floating(
         Match(wm_class="ssh-askpass"),  # ssh-askpass
         Match(title="branchdialog"),  # gitk
         Match(title="pinentry"),  # GPG key password entry
+        Match(wm_class="Conky"),  # conky desktop widget
     ]
 )
 auto_fullscreen = True
