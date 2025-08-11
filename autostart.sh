@@ -31,5 +31,6 @@ pgrep -x conky >/dev/null || (conky | logger -t conky) &
 
 # enable auto-rotation service (setup via install/auto-rotate/setup.sh)
 systemctl --user start auto-rotate.service 2>/dev/null || true
+pgrep -f "monitor-manager.sh" >/dev/null || ~/.config/qtile/install/monitor-manager/monitor-manager.sh &
 
 notify-send "Qtile" "Config loaded successfully." -u low 2>/dev/null
