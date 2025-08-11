@@ -183,6 +183,12 @@ keys = [
         lazy.spawn(os.path.expanduser("~/.config/qtile/install/monitor-manager/monitor-menu.sh")),
         desc="Monitor configuration menu",
     ),
+    Key(
+        [mod, "shift"],
+        "n",
+        lazy.spawn(os.path.expanduser("~/.config/qtile/install/rofi/notification-history.sh")),
+        desc="Notification history",
+    ),
     
     # Test key binding - use a regular key we know works
     Key([mod], "F1", lazy.spawn("notify-send 'Key Test' 'Mod+F1 pressed - key bindings work'"), desc="Test key binding"),
@@ -215,7 +221,7 @@ keys = [
         "⌨️ Keyboard",
         "Backlight",
         "bash -c 'echo \"Level $(cat /sys/class/leds/asus::kbd_backlight/brightness)\"'"
-    )), desc="Raise keyboard backlight"),
+    )), desc="Lower keyboard backlight"),
     Key([], "XF86Launch3", lazy.function(multimedia_cmd(
         "rofi -show drun",
         "🚀 Launcher",
