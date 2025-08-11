@@ -4,10 +4,28 @@
 # Can be called manually or from monitor detection service
 
 LOG_FILE="$HOME/.cache/qtile-monitor-manager.log"
+TOUCHSCREEN_SCRIPT="$HOME/.config/qtile/install/map-touchscreen-to-laptop.sh"
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
     logger -t "monitor-manager" "$1"
+}
+
+# Function to fix touchscreen mapping
+fix_touchscreen_mapping() {
+    if [[ -x "$TOUCHSCREEN_SCRIPT" ]]; then
+        log "Applying touchscreen mapping"
+        if "$TOUCHSCREEN_SCRIPT"; then
+            log "✓ Touchscreen mapping applied successfully"
+            dunstify -i input-touchpad "Touchscreen" "Mapped to laptop screen" -t 3000
+        else
+            log "✗ Failed to apply touchscreen mapping"
+            dunstify -i error "Touchscreen" "Failed to map to laptop screen" -t 3000
+        fi
+    else
+        log "Touchscreen mapping script not found or not executable"
+        dunstify -i error "Touchscreen" "Mapping script not found" -t 3000
+    fi
 }
 
 show_monitor_menu() {
@@ -18,6 +36,7 @@ show_monitor_menu() {
     local options=(
         "🖥️ Auto Configure (autorandr -c)"
         "🔧 Launch ARandR (GUI)"
+        "👆 Fix Touchscreen Mapping"
         "📋 Show Current Setup"
         "💾 Save Current Profile"
         "📂 Load Profile"
@@ -34,10 +53,16 @@ show_monitor_menu() {
             autorandr -c
             qtile cmd-obj -o cmd -f reload_config
             dunstify -i display "Monitor Manager" "Applied auto configuration and reloaded qtile"
+            # Fix touchscreen mapping after display configuration
+            fix_touchscreen_mapping
             ;;
         "🔧 Launch ARandR (GUI)")
             log "User selected: Launch ARandR"
             arandr &
+            ;;
+        "👆 Fix Touchscreen Mapping")
+            log "User selected: Fix touchscreen mapping"
+            fix_touchscreen_mapping
             ;;
         "📋 Show Current Setup")
             log "User selected: Show current setup"
@@ -67,6 +92,8 @@ show_monitor_menu() {
                     qtile cmd-obj -o cmd -f reload_config
                     dunstify -i display "Profile Loaded" "Applied: $selected_profile and reloaded qtile"
                     log "Loaded profile: $selected_profile"
+                    # Fix touchscreen mapping after profile load
+                    fix_touchscreen_mapping
                 fi
             else
                 dunstify -i display "No Profiles" "No saved autorandr profiles found"

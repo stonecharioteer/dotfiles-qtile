@@ -8,6 +8,7 @@ SCRIPT_NAME="auto-rotate"
 LOG_FILE="$HOME/.cache/${SCRIPT_NAME}.log"
 LOCK_FILE="/tmp/${SCRIPT_NAME}.lock"
 CONFIG_FILE="$HOME/.config/qtile/install/auto-rotate/config"
+TOUCHSCREEN_SCRIPT="$HOME/.config/qtile/install/map-touchscreen-to-laptop.sh"
 
 # Configuration defaults
 ROTATE_EXTERNAL_DISPLAYS=false
@@ -101,29 +102,29 @@ rotate_display() {
     log_message "Rotated display $display to $orientation"
 }
 
-# Function to rotate touch inputs
+# Function to rotate touch inputs with display area mapping
 rotate_touch_inputs() {
     local orientation=$1
     
-    # Touch transformation matrices for different orientations
+    # Touch transformation matrices for different orientations (rotation only)
     local matrix_normal="1 0 0 0 1 0 0 0 1"
     local matrix_right="0 1 0 -1 0 1 0 0 1"
     local matrix_left="0 -1 1 1 0 0 0 0 1"
     local matrix_inverted="-1 0 1 0 -1 1 0 0 1"
     
-    local matrix
+    local rotation_matrix
     case "$orientation" in
         "normal")
-            matrix="$matrix_normal"
+            rotation_matrix="$matrix_normal"
             ;;
         "right-up")
-            matrix="$matrix_right"
+            rotation_matrix="$matrix_right"
             ;;
         "left-up")
-            matrix="$matrix_left"
+            rotation_matrix="$matrix_left"
             ;;
         "bottom-up")
-            matrix="$matrix_inverted"
+            rotation_matrix="$matrix_inverted"
             ;;
         *)
             log_message "Unknown touch orientation: $orientation"
@@ -131,20 +132,39 @@ rotate_touch_inputs() {
             ;;
     esac
     
-    # Apply transformation to all touch devices
-    while IFS= read -r device; do
-        if [ -n "$device" ]; then
-            # Try standard Coordinate Transformation Matrix first
-            if xinput set-prop "$device" "Coordinate Transformation Matrix" $matrix 2>/dev/null; then
-                log_message "Rotated touch device: $device (standard matrix)"
-            # If that fails, try libinput Calibration Matrix (for stylus devices)
-            elif xinput set-prop "$device" "libinput Calibration Matrix" $matrix 2>/dev/null; then
-                log_message "Rotated touch device: $device (libinput matrix)"
-            else
-                log_message "Failed to rotate touch device: $device (no compatible matrix property)"
-            fi
+    # Use touchscreen mapping script to apply both display area mapping and rotation
+    if [[ -x "$TOUCHSCREEN_SCRIPT" ]]; then
+        log_message "Applying touchscreen mapping with rotation: $orientation"
+        if "$TOUCHSCREEN_SCRIPT" "$rotation_matrix"; then
+            log_message "✓ Touchscreen mapping with rotation applied successfully"
+        else
+            log_message "✗ Failed to apply touchscreen mapping with rotation"
+            # Fallback: try to apply rotation to other touch devices manually
+            while IFS= read -r device; do
+                if [[ -n "$device" && "$device" != "ELAN9008:00 04F3:2C82" ]]; then
+                    if xinput set-prop "$device" "Coordinate Transformation Matrix" $rotation_matrix 2>/dev/null; then
+                        log_message "Applied fallback rotation to: $device"
+                    fi
+                fi
+            done < <(get_touch_devices)
         fi
-    done < <(get_touch_devices)
+    else
+        log_message "Touchscreen mapping script not found, using fallback rotation"
+        # Fallback: apply rotation only to all touch devices
+        while IFS= read -r device; do
+            if [ -n "$device" ]; then
+                # Try standard Coordinate Transformation Matrix first
+                if xinput set-prop "$device" "Coordinate Transformation Matrix" $rotation_matrix 2>/dev/null; then
+                    log_message "Rotated touch device: $device (standard matrix)"
+                # If that fails, try libinput Calibration Matrix (for stylus devices)
+                elif xinput set-prop "$device" "libinput Calibration Matrix" $rotation_matrix 2>/dev/null; then
+                    log_message "Rotated touch device: $device (libinput matrix)"
+                else
+                    log_message "Failed to rotate touch device: $device (no compatible matrix property)"
+                fi
+            fi
+        done < <(get_touch_devices)
+    fi
 }
 
 # Function to handle orientation change
