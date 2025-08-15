@@ -1,0 +1,52 @@
+---
+- name: Complete Qtile Desktop Environment Setup
+  hosts: qtile_machines
+  become: yes
+  vars:
+    qtile_user: "{{ ansible_user | default('stonecharioteer') }}"
+    qtile_home: "/home/{{ qtile_user }}"
+    qtile_venv_path: "/opt/qtile"
+    
+  pre_tasks:
+    - name: Clone qtile dotfiles repository
+      git:
+        repo: https://github.com/stonecharioteer/dotfiles-qtile.git
+        dest: "{{ qtile_home }}/.config/qtile"
+        version: main
+        update: yes
+        force: yes
+      become_user: "{{ qtile_user }}"
+      
+    - name: Ensure qtile config directory ownership
+      file:
+        path: "{{ qtile_home }}/.config/qtile"
+        owner: "{{ qtile_user }}"
+        group: "{{ qtile_user }}"
+        recurse: yes
+
+  roles:
+    - locale-setup
+    - base-system
+    - python-environment
+    - qtile-desktop
+    - fonts
+    - desktop-apps
+    - system-integration
+
+  post_tasks:
+    - name: Display setup completion message
+      debug:
+        msg: |
+          Qtile setup completed successfully!
+          
+          Next steps:
+          1. Log out of current session
+          2. Select "Qtile" from display manager login screen
+          3. Log in with your user account
+          
+          Features enabled:
+          - Fish shell as default
+          - JetBrainsMono Nerd Font installed
+          - Hardware-specific configurations applied
+          - All multimedia keys and gestures configured
+          - Alacritty terminal with rofi integration

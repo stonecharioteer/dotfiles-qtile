@@ -1,0 +1,97 @@
+---
+# Repository is cloned in pre_tasks, so we can proceed with configuration
+
+- name: Make scripts executable
+  shell: |
+    find {{ qtile_home }}/.config/qtile -name "*.sh" -type f -exec chmod +x {} \;
+  become_user: "{{ qtile_user }}"
+
+- name: Create rofi config symlink
+  file:
+    src: "{{ qtile_home }}/.config/qtile/install/rofi"
+    dest: "{{ qtile_home }}/.config/rofi"
+    state: link
+    owner: "{{ qtile_user }}"
+    group: "{{ qtile_user }}"
+  ignore_errors: yes
+
+- name: Create dunst config directory
+  file:
+    path: "{{ qtile_home }}/.config/dunst"
+    state: directory
+    owner: "{{ qtile_user }}"
+    group: "{{ qtile_user }}"
+    mode: '0755'
+
+- name: Link dunst config
+  file:
+    src: "{{ qtile_home }}/.config/qtile/install/dunstrc"
+    dest: "{{ qtile_home }}/.config/dunst/dunstrc"
+    state: link
+    owner: "{{ qtile_user }}"
+    group: "{{ qtile_user }}"
+
+- name: Create picom config directory
+  file:
+    path: "{{ qtile_home }}/.config/picom"
+    state: directory
+    owner: "{{ qtile_user }}"
+    group: "{{ qtile_user }}"
+    mode: '0755'
+
+- name: Link picom config
+  file:
+    src: "{{ qtile_home }}/.config/qtile/install/picom.conf"
+    dest: "{{ qtile_home }}/.config/picom.conf"
+    state: link
+    owner: "{{ qtile_user }}"
+    group: "{{ qtile_user }}"
+
+- name: Set up systemd user services directory
+  file:
+    path: "{{ qtile_home }}/.config/systemd/user"
+    state: directory
+    owner: "{{ qtile_user }}"
+    group: "{{ qtile_user }}"
+    mode: '0755'
+
+- name: Copy systemd user service files
+  shell: |
+    find {{ qtile_home }}/.config/qtile/install -name "*.service" -type f -exec cp {} {{ qtile_home }}/.config/systemd/user/ \;
+    chown {{ qtile_user }}:{{ qtile_user }} {{ qtile_home }}/.config/systemd/user/*.service
+  ignore_errors: yes
+
+- name: Detect if system has battery (laptop detection)
+  stat:
+    path: /sys/class/power_supply/BAT0
+  register: battery_check
+
+- name: Set up battery monitoring cron job (laptops only)
+  cron:
+    name: "Battery monitor"
+    minute: "*/10"
+    job: "{{ qtile_home }}/.config/qtile/install/battery-monitor.sh"
+    user: "{{ qtile_user }}"
+  when: battery_check.stat.exists
+
+- name: Run brightness permissions setup script
+  command: "{{ qtile_home }}/.config/qtile/install/setup-brightness-permissions.sh"
+  args:
+    creates: /etc/udev/rules.d/90-backlight.rules
+
+- name: Run touchpad setup script (if touchegg is available)
+  command: "{{ qtile_home }}/.config/qtile/install/setup-touchpad.sh"
+  become_user: "{{ qtile_user }}"
+  ignore_errors: yes
+
+- name: Enable systemd user services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    scope: user
+    daemon_reload: yes
+  become_user: "{{ qtile_user }}"
+  with_items:
+    - auto-rotate.service
+    - monitor-manager.service
+  ignore_errors: yes

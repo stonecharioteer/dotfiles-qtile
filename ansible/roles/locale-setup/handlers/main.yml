@@ -1,0 +1,4 @@
+---
+- name: update locale
+  command: /usr/sbin/locale-gen
+  notify: reload systemd
