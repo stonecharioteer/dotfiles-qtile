@@ -1,25 +1,38 @@
 ---
-- name: Create Python virtual environment at /opt/qtile
+- name: Create Python virtual environment at /opt/qtile (if not exists)
   pip:
     name: pip
     virtualenv: "{{ qtile_venv_path }}"
     virtualenv_command: python3 -m venv
   become_user: "{{ qtile_user }}"
+  when: not qtile_venv_ready
 
-- name: Upgrade pip in virtual environment
+- name: Ensure pip is present in virtual environment (no upgrade)
   pip:
     name: pip
-    state: latest
     virtualenv: "{{ qtile_venv_path }}"
   become_user: "{{ qtile_user }}"
+  when: not qtile_already_installed
 
-- name: Install qtile and dependencies in virtual environment
+- name: Install qtile and dependencies in virtual environment (if not already installed)
   pip:
     name:
       - qtile
       - psutil
     virtualenv: "{{ qtile_venv_path }}"
   become_user: "{{ qtile_user }}"
+  when: not qtile_already_installed
+
+- name: Display qtile installation status
+  debug:
+    msg: |
+      === QTILE PYTHON ENVIRONMENT ===
+      {% if qtile_already_installed %}
+      Qtile already installed - skipping installation
+      {% else %}
+      Qtile installed fresh in virtual environment
+      {% endif %}
+      Virtual environment: {{ qtile_venv_path }}
 
 - name: Set executable permissions on qtile binaries
   file:
