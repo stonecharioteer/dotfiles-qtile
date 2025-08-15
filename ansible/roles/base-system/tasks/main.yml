@@ -2,12 +2,14 @@
 - name: Install Python 3 and development tools
   package:
     name:
-      - python3
-      - python3-venv
-      - python3-pip
       - build-essential
-      - git
       - curl
+      - dmidecode           # Hardware detection for laptop/desktop classification
+      - git
+      - iproute2            # Contains ip command for network information
+      - python3
+      - python3-pip
+      - python3-venv
       - wget
     state: present
 

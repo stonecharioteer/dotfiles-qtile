@@ -71,6 +71,14 @@
   when: has_amd_gpu
   ignore_errors: yes
 
+- name: Install laptop-specific sensor packages (laptops only)
+  package:
+    name:
+      - iio-sensor-proxy  # For automatic screen rotation based on accelerometer
+    state: present
+  when: is_laptop is defined and is_laptop
+  ignore_errors: yes
+
 - name: Copy qtile.desktop session file
   copy:
     src: "{{ qtile_home }}/.config/qtile/install/qtile.desktop"
