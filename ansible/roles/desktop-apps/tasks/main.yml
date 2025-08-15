@@ -1,0 +1,44 @@
+---
+- name: Install Alacritty terminal emulator
+  package:
+    name: alacritty
+    state: present
+
+- name: Install multimedia and hardware control tools
+  package:
+    name:
+      - pulseaudio-utils
+      - brightnessctl
+      - bc
+      - xbacklight
+      - conky
+      - lm-sensors
+      - amdgpu-top
+    state: present
+  ignore_errors: yes
+
+- name: Install touchpad gesture support
+  package:
+    name: touchegg
+    state: present
+  ignore_errors: yes
+
+- name: Create .local/share/applications directory for user
+  file:
+    path: "{{ qtile_home }}/.local/share/applications"
+    state: directory
+    owner: "{{ qtile_user }}"
+    group: "{{ qtile_user }}"
+    mode: '0755'
+
+- name: Create Alacritty desktop file for rofi integration
+  template:
+    src: alacritty.desktop.j2
+    dest: "{{ qtile_home }}/.local/share/applications/alacritty.desktop"
+    owner: "{{ qtile_user }}"
+    group: "{{ qtile_user }}"
+    mode: '0644'
+
+- name: Update desktop database
+  command: update-desktop-database "{{ qtile_home }}/.local/share/applications"
+  become_user: "{{ qtile_user }}"

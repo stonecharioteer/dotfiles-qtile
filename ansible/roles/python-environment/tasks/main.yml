@@ -1,0 +1,36 @@
+---
+- name: Create Python virtual environment at /opt/qtile
+  pip:
+    name: pip
+    virtualenv: "{{ qtile_venv_path }}"
+    virtualenv_command: python3 -m venv
+  become_user: "{{ qtile_user }}"
+
+- name: Upgrade pip in virtual environment
+  pip:
+    name: pip
+    state: latest
+    virtualenv: "{{ qtile_venv_path }}"
+  become_user: "{{ qtile_user }}"
+
+- name: Install qtile and dependencies in virtual environment
+  pip:
+    name:
+      - qtile
+      - psutil
+    virtualenv: "{{ qtile_venv_path }}"
+  become_user: "{{ qtile_user }}"
+
+- name: Set executable permissions on qtile binaries
+  file:
+    path: "{{ item }}"
+    mode: '0755'
+  with_items:
+    - "{{ qtile_venv_path }}/bin/qtile"
+    - "{{ qtile_venv_path }}/bin/python"
+    - "{{ qtile_venv_path }}/bin/python3"
+
+- name: Make qtile binaries readable by all users
+  file:
+    path: "{{ qtile_venv_path }}/bin/qtile"
+    mode: 'a+rx'
