@@ -1,0 +1,10 @@
+---
+# Global variables for qtile setup
+
+# Repository URLs - default to SSH since playbook sets up SSH keys
+qtile_git_repo: "git@github.com:stonecharioteer/dotfiles-qtile.git"
+alacritty_git_repo: "git@github.com:alacritty/alacritty.git"
+
+# For HTTPS authentication (if SSH not available), override in inventory/hosts.yml:
+# qtile_git_repo: "https://github.com/stonecharioteer/dotfiles-qtile.git"
+# alacritty_git_repo: "https://github.com/alacritty/alacritty.git"

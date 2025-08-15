@@ -54,6 +54,13 @@ cd ansible/
 ansible-playbook -i inventory/hosts.yml qtile-setup.yml --ask-become-pass
 ```
 
+**Note:** The playbook defaults to SSH cloning since it sets up SSH keys. For HTTPS authentication (if SSH not available), override with:
+```bash
+ansible-playbook -i inventory/hosts.yml qtile-setup.yml --ask-become-pass \
+  -e "qtile_git_repo=https://github.com/stonecharioteer/dotfiles-qtile.git" \
+  -e "alacritty_git_repo=https://github.com/alacritty/alacritty.git"
+```
+
 Enter your sudo password when prompted.
 
 ### 4. Login

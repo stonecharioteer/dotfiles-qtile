@@ -2,7 +2,7 @@
 # Safe repository setup using information from failsafe-checks
 - name: Clone or update qtile dotfiles repository (safe mode)
   git:
-    repo: https://github.com/stonecharioteer/dotfiles-qtile.git
+    repo: "{{ qtile_git_repo | default('git@github.com:stonecharioteer/dotfiles-qtile.git') }}"
     dest: "{{ qtile_home }}/.config/qtile"
     version: main
     update: "{{ not qtile_config_repo_exists }}"  # Only update if it's a new clone
@@ -50,7 +50,7 @@
 
 - name: Clone Alacritty repository (fresh install only)
   git:
-    repo: https://github.com/alacritty/alacritty.git
+    repo: "{{ alacritty_git_repo | default('git@github.com:alacritty/alacritty.git') }}"
     dest: "{{ qtile_home }}/code/tools/alacritty"
     version: master
     update: no  # Never update existing repos
