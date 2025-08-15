@@ -1,0 +1,14 @@
+[general]
+import = [
+	"~/.config/alacritty/themes/themes/hatsunemiku.toml"
+]
+[window]
+opacity = 1.0
+padding = { x = 5, y = 3 }
+[font]
+normal = { family = "JetBrainsMono NF", style="Regular"}
+bold = { family = "JetBrainsMono NF", style="Bold"}
+italic = { family = "JetBrainsMono NF", style="Italic"}
+bold_italic = { family = "JetBrainsMono NF", style="Bold Italic"}
+size = 12
+

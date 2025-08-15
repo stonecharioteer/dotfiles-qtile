@@ -10,7 +10,7 @@ pgrep -x copyq >/dev/null || copyq &
 pgrep -x blueman-applet >/dev/null || blueman-applet &
 
 # keyboard customizations, only for the laptop
-# TODO: Figure out how to customize laptop keyboard specifically
+# TODO:Figure out how to customize laptop keyboard specifically
 # xmodmap ~/.Xmodmap
 setxkbmap -option caps:escape -option shift:both_capslock
 
