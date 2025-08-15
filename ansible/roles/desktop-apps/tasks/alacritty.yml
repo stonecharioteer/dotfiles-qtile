@@ -38,16 +38,9 @@
     group: "{{ qtile_user }}"
     mode: '0755'
 
-- name: Clone Alacritty repository to ~/code/tools/alacritty
-  git:
-    repo: https://github.com/alacritty/alacritty.git
-    dest: "{{ qtile_home }}/code/tools/alacritty"
-    version: master
-    update: yes
-    force: yes
-  become_user: "{{ qtile_user }}"
+# Alacritty repository is cloned by repository-setup role
 
-- name: Build Alacritty
+- name: Build Alacritty (if not already built)
   shell: |
     source {{ qtile_home }}/.cargo/env
     cd {{ qtile_home }}/code/tools/alacritty
@@ -55,13 +48,26 @@
   become_user: "{{ qtile_user }}"
   register: alacritty_build
   failed_when: alacritty_build.rc != 0
+  when: not alacritty_already_built
 
-- name: Install Alacritty binary to /usr/local/bin
+- name: Display Alacritty build status
+  debug:
+    msg: |
+      === ALACRITTY BUILD STATUS ===
+      {% if alacritty_already_built %}
+      Alacritty binary already exists - skipping build
+      {% else %}
+      Alacritty built from source successfully
+      {% endif %}
+      Binary location: /usr/local/bin/alacritty
+
+- name: Install Alacritty binary to /usr/local/bin (if not already installed)
   copy:
     src: "{{ qtile_home }}/code/tools/alacritty/target/release/alacritty"
     dest: /usr/local/bin/alacritty
     mode: '0755'
     remote_src: yes
+  when: not alacritty_already_built
 
 - name: Install Alacritty terminfo
   shell: |

@@ -62,12 +62,28 @@ Log out and select "Qtile" from your display manager.
 
 ## What This Does
 
-- Clones your dotfiles to `~/.config/qtile` on each machine
-- Installs Fish shell and sets it as default
-- Builds Alacritty from source with desktop integration
-- Sets up qtile in a Python virtual environment at `/opt/qtile`
-- Installs JetBrainsMono Nerd Fonts
-- Configures all the services and desktop integration
+- **Safely clones/updates** your dotfiles to `~/.config/qtile` on each machine
+- **Installs Fish shell** and sets it as default
+- **Builds Alacritty** from source with full desktop integration
+- **Sets up qtile** in a Python virtual environment at `/opt/qtile`
+- **Installs JetBrainsMono Nerd Fonts** with proper system integration
+- **Configures all services** and desktop integration
+
+## Failsafe Behavior
+
+✅ **Safe Operations:**
+- If `~/.config/qtile` exists and is the correct repository → updates safely
+- If `/opt/qtile` venv exists with qtile installed → skips installation  
+- If Alacritty already built → skips compilation
+- Preserves local git branches and uncommitted changes
+
+❌ **Will Stop If:**
+- `~/.config/qtile` exists but isn't a git repository
+- `~/.config/qtile` is a different git repository 
+- `/opt/qtile` exists but isn't a valid Python virtual environment
+- `~/code/tools/alacritty` exists but isn't the Alacritty repository
+
+The playbook shows you exactly what it finds and what it will do before making changes.
 
 ## Testing Locally First
 

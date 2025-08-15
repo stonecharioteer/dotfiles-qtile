@@ -1,5 +1,5 @@
 ---
-# Repository is cloned in pre_tasks, so we can proceed with configuration
+# Repository is cloned by repository-setup role, so we can proceed with configuration
 
 - name: Make scripts executable
   shell: |
