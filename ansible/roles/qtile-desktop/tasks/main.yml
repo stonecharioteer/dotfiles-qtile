@@ -45,6 +45,7 @@
       - powertop            # For detailed power analysis
       - redshift            # Blue light filter
       - rofi                # Application launcher
+      - scrot               # Screenshot utility
       - upower              # For power monitoring functionality
       - x11-xkb-utils       # Contains setxkbmap
       - x11-xserver-utils   # Contains xrandr, xset
