@@ -634,7 +634,7 @@ def screen(main=False):
             else widget.Image(filename=images["python"], margin=5),
             sep(),
             # widget.Spacer(15),
-            widget.CurrentLayoutIcon(),
+            widget.CurrentLayout(),
             sep(),
             widget.GroupBox(
                 highlight_method="block",
