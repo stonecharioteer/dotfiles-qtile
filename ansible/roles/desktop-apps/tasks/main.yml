@@ -1,8 +1,6 @@
 ---
-- name: Install Alacritty terminal emulator
-  package:
-    name: alacritty
-    state: present
+- name: Install Alacritty from source with full desktop integration
+  include: alacritty.yml
 
 - name: Install multimedia and hardware control tools
   package:
@@ -31,14 +29,4 @@
     group: "{{ qtile_user }}"
     mode: '0755'
 
-- name: Create Alacritty desktop file for rofi integration
-  template:
-    src: alacritty.desktop.j2
-    dest: "{{ qtile_home }}/.local/share/applications/alacritty.desktop"
-    owner: "{{ qtile_user }}"
-    group: "{{ qtile_user }}"
-    mode: '0644'
-
-- name: Update desktop database
-  command: update-desktop-database "{{ qtile_home }}/.local/share/applications"
-  become_user: "{{ qtile_user }}"
+# Alacritty desktop integration is handled in alacritty.yml

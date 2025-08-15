@@ -1,97 +1,83 @@
-# Qtile Ansible Automation
+# Qtile Setup with Ansible
 
-Automated setup for Qtile desktop environment across all your Linux machines.
+Simple automation to install qtile + my dotfiles on any Linux machine.
 
-## Prerequisites
+## What You Need
 
-1. **Ansible installed** on your control machine:
-   ```bash
-   sudo apt install ansible  # Ubuntu/Debian
-   # or
-   pip install ansible
-   ```
+1. **On your laptop** (control machine):
+   - Ansible: `sudo apt install ansible`
+   - SSH access to target machines
 
-2. **SSH access** to target machines (if not running locally)
+2. **On target machines**:
+   - SSH server running
+   - Your user has sudo privileges
+   - Git access to clone from GitHub
 
-3. **sudo privileges** on target machines
+## Setup Steps
 
-## Quick Start
+### 1. Configure Git Access on Target Machines
 
-1. **Update inventory**: Edit `inventory/hosts.yml` to include your machines:
-   ```yaml
-   qtile_machines:
-     hosts:
-       localhost:
-         ansible_connection: local
-       my-desktop:
-         ansible_host: 192.168.1.100
-         ansible_user: stonecharioteer
-       my-laptop:
-         ansible_host: 192.168.1.101  
-         ansible_user: stonecharioteer
-   ```
+**Option A: Copy your SSH key (recommended)**
+```bash
+# From your laptop, copy your SSH key to the target machine
+ssh-copy-id username@target-machine-ip
 
-2. **Run the playbook**:
-   ```bash
-   cd ansible/
-   ansible-playbook -i inventory/hosts.yml qtile-setup.yml --ask-become-pass
-   ```
+# Then copy your GitHub SSH key
+scp ~/.ssh/id_rsa* username@target-machine-ip:~/.ssh/
+```
 
-3. **Log out and select "Qtile"** from your display manager
+**Option B: Use GitHub CLI**
+```bash
+# On the target machine, install and setup gh cli
+sudo apt install gh
+gh auth login
+```
 
-## What Gets Installed
+### 2. Update Inventory
 
-- **System**: US UTF-8 locale, Python 3, Fish shell (as default)
-- **Qtile**: Virtual environment at `/opt/qtile` with qtile and psutil
-- **Desktop**: Rofi, Dunst, Picom, Alacritty, system tray apps
-- **Fonts**: JetBrainsMono Nerd Fonts (from install/fonts/ or package manager fallback)
-- **Hardware**: Conditional laptop features (battery monitoring, touchpad gestures)
-- **Services**: Auto-rotation, monitor management, suspend handling
+Edit `inventory/hosts.yml`:
+```yaml
+qtile_machines:
+  hosts:
+    my-desktop:
+      ansible_host: 192.168.1.100
+      ansible_user: stonecharioteer
+    my-laptop:
+      ansible_host: 192.168.1.101
+      ansible_user: stonecharioteer
+```
 
-## Customization
+### 3. Run the Playbook
 
-- **User account**: Change `qtile_user` in `group_vars/all.yml`
-- **Package lists**: Modify distribution-specific packages in `group_vars/all.yml`
-- **Target machines**: Add/remove hosts in `inventory/hosts.yml`
+```bash
+cd ansible/
+ansible-playbook -i inventory/hosts.yml qtile-setup.yml --ask-become-pass
+```
 
-## Hardware-Specific Features
+Enter your sudo password when prompted.
 
-- **Laptops**: Battery monitoring, touchpad gestures, auto-rotation
-- **Desktops**: Full multi-monitor support, AMD GPU monitoring
-- **All**: Multimedia keys, brightness controls, notification system
+### 4. Login
 
-## Manual Steps After Installation
+Log out and select "Qtile" from your display manager.
 
-1. Log out of current session
-2. Select "Qtile" from display manager
-3. Log in - everything should work automatically!
+## What This Does
 
-## Fonts Setup (Optional)
+- Clones your dotfiles to `~/.config/qtile` on each machine
+- Installs Fish shell and sets it as default
+- Builds Alacritty from source with desktop integration
+- Sets up qtile in a Python virtual environment at `/opt/qtile`
+- Installs JetBrainsMono Nerd Fonts
+- Configures all the services and desktop integration
 
-For full Nerd Font icon support:
-1. Download JetBrainsMono Nerd Font from [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts/releases)
-2. Extract font files to `install/fonts/` directory
-3. Re-run the playbook
+## Testing Locally First
+
+To test on your current machine:
+```bash
+ansible-playbook -i inventory/hosts.yml qtile-setup.yml --ask-become-pass --limit localhost
+```
 
 ## Troubleshooting
 
-- **Permission errors**: Make sure you run with `--ask-become-pass`
-- **Service failures**: Check logs with `journalctl --user -u service-name`
-- **Font icons missing**: Place JetBrainsMono Nerd Font files in install/fonts/ as described above
-
-## Directory Structure
-
-```
-ansible/
-├── qtile-setup.yml          # Main playbook
-├── inventory/hosts.yml      # Machine definitions  
-├── group_vars/all.yml       # Global variables
-└── roles/                   # Individual installation roles
-    ├── locale-setup/        # US UTF-8 locale configuration
-    ├── base-system/         # Python, Fish, /opt/qtile setup
-    ├── python-environment/  # Qtile venv and packages
-    ├── qtile-desktop/       # Core desktop dependencies
-    ├── fonts/               # JetBrainsMono installation
-    ├── desktop-apps/        # Alacritty and tools
-    └── system-integration/  # Config deployment and services
-```
+- **Git clone fails**: Check SSH key setup or GitHub CLI authentication
+- **Permission errors**: Make sure your user has sudo privileges
+- **Connection fails**: Verify SSH access and machine IPs in inventory

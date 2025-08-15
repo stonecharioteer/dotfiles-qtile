@@ -7,6 +7,23 @@
     qtile_home: "/home/{{ qtile_user }}"
     qtile_venv_path: "/opt/qtile"
     
+  pre_tasks:
+    - name: Clone qtile dotfiles repository
+      git:
+        repo: https://github.com/stonecharioteer/dotfiles-qtile.git
+        dest: "{{ qtile_home }}/.config/qtile"
+        version: main
+        update: yes
+        force: yes
+      become_user: "{{ qtile_user }}"
+      
+    - name: Ensure qtile config directory ownership
+      file:
+        path: "{{ qtile_home }}/.config/qtile"
+        owner: "{{ qtile_user }}"
+        group: "{{ qtile_user }}"
+        recurse: yes
+
   roles:
     - locale-setup
     - base-system

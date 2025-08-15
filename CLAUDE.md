@@ -9,6 +9,8 @@ NEVER proactively create documentation files (*.md) or README files. Only create
 ## Qtile Configuration
 
 - This folder contains my qtile config. Testing this isn't straightforward. On my machines, the executable environment will be at /opt/qtile/bin/python3, so if that environment doesn't exist feel free to tell me.
+- **Automated deployment**: Use the Ansible playbook in `ansible/` directory for complete setup across multiple machines
+- **Repository cloning**: Playbook automatically clones this repository to `~/.config/qtile` on target machines
 
 ## Architecture Overview
 
@@ -24,20 +26,26 @@ NEVER proactively create documentation files (*.md) or README files. Only create
 - **`has_battery()`**: System capability detection for battery-dependent features
 - **`has_asus_keyboard()`**: Laptop detection for tablet mode functionality
 - **`multimedia_cmd()`**: Helper function for multimedia commands with notifications
+- **`get_power_draw()`**: Comprehensive power monitoring using UPower, component estimation, and PowerTOP
+- **`get_hostname()`**: System hostname display for multi-machine identification
+- **`get_ip_address()`**: Network interface and IP address detection
 - **`sep()`**: Consistent separator widget factory using burgundy color theme
 - **`TabletModeToggle`**: Class for managing keyboard/touchpad disable functionality
 
 ### Widget Organization Strategy
-- **Top bar**: Navigation, branding, system tray
-- **Bottom bar**: System monitoring, hardware stats, clock
+- **Top bar**: Navigation, branding, system tray, tablet mode toggle (laptops)
+- **Bottom bar**: System monitoring, hardware stats, power monitoring, networking, clock
 - **Conditional placement**: Main screen gets full features, secondary screens simplified
-- **Hardware-dependent widgets**: Battery widget only appears when battery detected
+- **Hardware-dependent widgets**: Battery widget, power monitoring, hostname/IP on main screen only
 
 ### Hardware Integration
 - **AMD GPU monitoring**: Custom `amdgpu_metadata()` and `get_vram_usage()` functions
+- **NVIDIA GPU monitoring**: Power consumption via nvidia-smi integration
+- **Power monitoring**: Multi-method approach using UPower, component estimation, and PowerTOP
 - **Multi-monitor support**: Dynamic screen creation with `count_monitors()`
 - **Thermal monitoring**: CPU and GPU temperature sensors
 - **Mouse-aware navigation**: Custom `move_mouse_to_next_monitor()` function
+- **Network monitoring**: Real-time IP address and interface detection
 
 ### Styling and Theming
 - **Minimal color palette**: Single accent color (`burgandy: #b84d57`)
@@ -50,7 +58,15 @@ NEVER proactively create documentation files (*.md) or README files. Only create
 - **Utility scripts**: `battery-monitor.sh`, `redshift/gamma.sh`, `rofi/screenshot.sh`
 - **Auto-rotation system**: `auto-rotate/auto-rotate.sh`, `auto-rotate.service`, `reset-touch.sh`
 - **Setup scripts**: `setup-brightness-permissions.sh`, `setup-touchpad.sh`
+- **Font assets**: `fonts/JetBrainsMono/` directory with complete Nerd Font collection
 - **Integration pattern**: Self-contained scripts for system-wide functionality
+
+### Ansible Automation in ansible/
+- **Complete deployment**: `qtile-setup.yml` main playbook with 7 specialized roles
+- **Role structure**: locale-setup, base-system, python-environment, qtile-desktop, fonts, desktop-apps, system-integration
+- **Remote deployment**: Clones repository and sets up environment on target machines
+- **Alacritty build**: Source compilation with full desktop integration at `~/code/tools/alacritty`
+- **Inventory management**: `inventory/hosts.yml` for multi-machine deployment
 
 ### Conditional Functionality Patterns
 - Hardware detection before enabling features (battery, GPU, monitors)
@@ -142,6 +158,26 @@ The user-level services are automatically enabled via autostart.sh on qtile star
   - Created auto-rotation service with systemd integration
   - Support for touchscreen, stylus, and touchpad rotation matrices
   - Tablet mode disables keyboard/touchpad, enables touch-only interaction
+
+### 2025-08-15
+- Implemented comprehensive Ansible automation for qtile deployment:
+  - Created complete Ansible playbook structure with 7 specialized roles
+  - Locale-first setup ensuring US UTF-8 across all systems 
+  - Automated Python environment creation at `/opt/qtile` with qtile + psutil
+  - Fish shell configuration as default for stonecharioteer user
+  - Full Alacritty build from source with desktop integration at `~/code/tools/alacritty`
+  - Rust toolchain installation for Alacritty compilation
+  - JetBrainsMono Nerd Fonts installation from `install/fonts/` directory
+  - Complete qtile configuration deployment via GitHub repository cloning
+  - Hardware-specific features (battery monitoring, touchpad gestures, auto-rotation)
+  - Systemd services, cron jobs, and permissions automation
+  - Power monitoring dependencies (upower, powertop, nvidia-smi)
+- Remote deployment capability:
+  - Playbook clones `stonecharioteer/dotfiles-qtile` directly to `~/.config/qtile` on target machines
+  - SSH key or GitHub CLI authentication options
+  - No manual file copying required - everything fetched from GitHub
+  - Support for multiple machine deployment via Ansible inventory
+  - Simple README with minimal setup requirements
 
 ## Gameplan / Todo Items
 

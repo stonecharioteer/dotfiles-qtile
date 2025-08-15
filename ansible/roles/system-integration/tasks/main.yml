@@ -1,33 +1,10 @@
 ---
-- name: Deploy qtile configuration directory
-  synchronize:
-    src: "{{ playbook_dir }}/../"
-    dest: "{{ qtile_home }}/.config/qtile/"
-    delete: no
-    rsync_opts:
-      - "--exclude=ansible"
-      - "--exclude=.git"
-      - "--exclude=README.md"
-    owner: yes
-    group: yes
-  become_user: "{{ qtile_user }}"
-  delegate_to: localhost
-
-- name: Fix ownership of qtile config directory
-  file:
-    path: "{{ qtile_home }}/.config/qtile"
-    owner: "{{ qtile_user }}"
-    group: "{{ qtile_user }}"
-    recurse: yes
+# Repository is cloned in pre_tasks, so we can proceed with configuration
 
 - name: Make scripts executable
-  file:
-    path: "{{ item }}"
-    mode: '0755'
-  with_fileglob:
-    - "{{ qtile_home }}/.config/qtile/*.sh"
-    - "{{ qtile_home }}/.config/qtile/install/*.sh"
-    - "{{ qtile_home }}/.config/qtile/install/*/*.sh"
+  shell: |
+    find {{ qtile_home }}/.config/qtile -name "*.sh" -type f -exec chmod +x {} \;
+  become_user: "{{ qtile_user }}"
 
 - name: Create rofi config symlink
   file:
@@ -79,14 +56,10 @@
     mode: '0755'
 
 - name: Copy systemd user service files
-  copy:
-    src: "{{ item }}"
-    dest: "{{ qtile_home }}/.config/systemd/user/"
-    owner: "{{ qtile_user }}"
-    group: "{{ qtile_user }}"
-    mode: '0644'
-  with_fileglob:
-    - "{{ qtile_home }}/.config/qtile/install/*/*.service"
+  shell: |
+    find {{ qtile_home }}/.config/qtile/install -name "*.service" -type f -exec cp {} {{ qtile_home }}/.config/systemd/user/ \;
+    chown {{ qtile_user }}:{{ qtile_user }} {{ qtile_home }}/.config/systemd/user/*.service
+  ignore_errors: yes
 
 - name: Detect if system has battery (laptop detection)
   stat:
