@@ -1,51 +1,91 @@
 ---
-# Repository is cloned by repository-setup role, so we can proceed with configuration
+# System Integration Role - Configuration Symlinking
+# Makes the qtile repository the single source of truth for all configurations
 
 - name: Make scripts executable
   shell: |
     find {{ qtile_home }}/.config/qtile -name "*.sh" -type f -exec chmod +x {} \;
   become_user: "{{ qtile_user }}"
 
-- name: Create rofi config symlink
+- name: Create user .config directory
   file:
-    src: "{{ qtile_home }}/.config/qtile/install/rofi"
-    dest: "{{ qtile_home }}/.config/rofi"
+    path: "{{ qtile_home }}/.config"
+    state: directory
+    owner: "{{ qtile_user }}"
+    group: "{{ qtile_user }}"
+    mode: '0755'
+
+- name: Backup existing configuration directories
+  block:
+    - name: Check for existing config directories
+      stat:
+        path: "{{ qtile_home }}/.config/{{ item }}"
+      register: existing_configs
+      loop:
+        - dunst
+        - touchegg
+        - rofi
+        - conky
+
+    - name: Backup existing directories that aren't symlinks
+      command: mv "{{ qtile_home }}/.config/{{ item.item }}" "{{ qtile_home }}/.config/{{ item.item }}.backup.{{ ansible_date_time.epoch }}"
+      when: item.stat.exists and not item.stat.islnk
+      loop: "{{ existing_configs.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      become_user: "{{ qtile_user }}"
+
+- name: Create directory symlinks for configuration folders
+  file:
+    src: "{{ qtile_home }}/.config/qtile/install/{{ item }}"
+    dest: "{{ qtile_home }}/.config/{{ item }}"
     state: link
     owner: "{{ qtile_user }}"
     group: "{{ qtile_user }}"
+    force: yes  # Replace existing symlinks
+  loop:
+    - dunst
+    - touchegg
+    - rofi
+    - conky
+  become_user: "{{ qtile_user }}"
+
+- name: Check for existing standalone config files
+  stat:
+    path: "{{ qtile_home }}/.config/{{ item }}"
+  register: existing_files
+  loop:
+    - picom.conf
+
+- name: Backup existing standalone config files
+  command: mv "{{ qtile_home }}/.config/{{ item.item }}" "{{ qtile_home }}/.config/{{ item.item }}.backup.{{ ansible_date_time.epoch }}"
+  when: item.stat.exists and not item.stat.islnk
+  loop: "{{ existing_files.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  become_user: "{{ qtile_user }}"
+
+- name: Create file symlinks for standalone configurations
+  file:
+    src: "{{ qtile_home }}/.config/qtile/install/{{ item }}"
+    dest: "{{ qtile_home }}/.config/{{ item }}"
+    state: link
+    owner: "{{ qtile_user }}"
+    group: "{{ qtile_user }}"
+    force: yes
+  loop:
+    - picom.conf
+  become_user: "{{ qtile_user }}"
+
+- name: Copy X11 configuration files
+  copy:
+    src: "{{ qtile_home }}/.config/qtile/install/X11/{{ item }}"
+    dest: "/etc/X11/xorg.conf.d/{{ item }}"
+    mode: '0644'
+    backup: yes
+  loop:
+    - 40-libinput-touchpad.conf
   ignore_errors: yes
-
-- name: Create dunst config directory
-  file:
-    path: "{{ qtile_home }}/.config/dunst"
-    state: directory
-    owner: "{{ qtile_user }}"
-    group: "{{ qtile_user }}"
-    mode: '0755'
-
-- name: Link dunst config
-  file:
-    src: "{{ qtile_home }}/.config/qtile/install/dunstrc"
-    dest: "{{ qtile_home }}/.config/dunst/dunstrc"
-    state: link
-    owner: "{{ qtile_user }}"
-    group: "{{ qtile_user }}"
-
-- name: Create picom config directory
-  file:
-    path: "{{ qtile_home }}/.config/picom"
-    state: directory
-    owner: "{{ qtile_user }}"
-    group: "{{ qtile_user }}"
-    mode: '0755'
-
-- name: Link picom config
-  file:
-    src: "{{ qtile_home }}/.config/qtile/install/picom.conf"
-    dest: "{{ qtile_home }}/.config/picom.conf"
-    state: link
-    owner: "{{ qtile_user }}"
-    group: "{{ qtile_user }}"
 
 - name: Set up systemd user services directory
   file:
@@ -79,9 +119,11 @@
   args:
     creates: /etc/udev/rules.d/90-backlight.rules
 
-- name: Run touchpad setup script (if touchegg is available)
-  command: "{{ qtile_home }}/.config/qtile/install/setup-touchpad.sh"
-  become_user: "{{ qtile_user }}"
+- name: Enable touchegg system service
+  systemd:
+    name: touchegg.service
+    enabled: yes
+    state: started
   ignore_errors: yes
 
 - name: Enable systemd user services
@@ -95,3 +137,18 @@
     - auto-rotate.service
     - monitor-manager.service
   ignore_errors: yes
+
+- name: Display configuration symlinks status
+  debug:
+    msg: |
+      === CONFIGURATION SYMLINKS CREATED ===
+      Directory symlinks (entire folders managed by git):
+      ~/.config/dunst -> ~/.config/qtile/install/dunst
+      ~/.config/touchegg -> ~/.config/qtile/install/touchegg  
+      ~/.config/rofi -> ~/.config/qtile/install/rofi
+      ~/.config/conky -> ~/.config/qtile/install/conky
+      
+      File symlinks:
+      ~/.config/picom.conf -> ~/.config/qtile/install/picom.conf
+      
+      Repository is now the single source of truth for all configurations!

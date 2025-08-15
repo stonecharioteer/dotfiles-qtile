@@ -196,3 +196,4 @@ The user-level services are automatically enabled via autostart.sh on qtile star
 - [ ] **ASUS ROG laptop-specific controls** - Research and implement laptop-specific function key mappings
 - [ ] **Performance profile integration** - Connect fan curves to system performance modes if available
 - [ ] **Advanced power management** - Integrate fan controls with existing battery monitoring system
+- always use ssh based cloning in ansible playbooks for github
