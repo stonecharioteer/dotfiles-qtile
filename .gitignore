@@ -241,3 +241,6 @@ __marimo__/
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# Alacritty themes (cloned from external repository)
+install/alacritty/themes/

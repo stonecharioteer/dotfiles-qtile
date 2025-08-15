@@ -555,6 +555,16 @@ def get_ip_address():
         return "IP: Error"
 
 
+def get_hostname():
+    """Get the system hostname"""
+    import socket
+    
+    try:
+        return f"Host: {socket.gethostname()}"
+    except Exception:
+        return "Host: Error"
+
+
 def screen(main=False):
     """Returns a default screen with a bar."""
     bottom_widgets = [
@@ -602,9 +612,11 @@ def screen(main=False):
             ),
         ])
     
-    # Add IP address widget only for main screen
+    # Add IP address and hostname widgets only for main screen
     if main:
         bottom_widgets.extend([
+            sep(),
+            widget.GenPollText(func=get_hostname, update_interval=3600, fontsize=16),
             sep(),
             widget.GenPollText(func=get_ip_address, update_interval=300, fontsize=16),
         ])
