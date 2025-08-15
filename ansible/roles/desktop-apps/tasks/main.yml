@@ -1,6 +1,6 @@
 ---
 - name: Install Alacritty from source with full desktop integration
-  include: alacritty.yml
+  include_tasks: alacritty.yml
 
 - name: Install multimedia and hardware control tools
   package:
@@ -9,9 +9,8 @@
       - brightnessctl
       - bc
       - xbacklight
-      - conky
+      - conky-all  # Full conky functionality
       - lm-sensors
-      - amdgpu-top
     state: present
   ignore_errors: yes
 

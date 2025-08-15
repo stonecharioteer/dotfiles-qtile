@@ -10,15 +10,10 @@
   become_user: "{{ qtile_user }}"
   when: not qtile_config_repo_exists
 
-- name: Update existing qtile repository (safe mode)
-  shell: |
-    cd {{ qtile_home }}/.config/qtile
-    git fetch origin
-    echo "Repository updated, but not merged to preserve local changes"
-  become_user: "{{ qtile_user }}"
+- name: Leave existing qtile repository untouched
+  debug:
+    msg: "Qtile repository already exists - skipping any git operations"
   when: qtile_config_repo_exists
-  register: git_fetch_result
-  changed_when: false
 
 - name: Display git status for existing repository
   shell: |
@@ -53,25 +48,20 @@
     group: "{{ qtile_user }}"
     recurse: yes
 
-- name: Clone or update Alacritty repository (safe mode)
+- name: Clone Alacritty repository (fresh install only)
   git:
     repo: https://github.com/alacritty/alacritty.git
     dest: "{{ qtile_home }}/code/tools/alacritty"
     version: master
-    update: "{{ not alacritty_source_repo_exists }}"  # Only update if it's a new clone
-    force: no  # Never force, to preserve local changes
+    update: no  # Never update existing repos
+    force: no   # Never force, to preserve local changes
   become_user: "{{ qtile_user }}"
   when: not alacritty_source_repo_exists
 
-- name: Update existing Alacritty repository (safe mode)
-  shell: |
-    cd {{ qtile_home }}/code/tools/alacritty
-    git fetch origin
-    echo "Alacritty repository updated, but not merged to preserve local changes"
-  become_user: "{{ qtile_user }}"
+- name: Leave existing Alacritty repository untouched
+  debug:
+    msg: "Alacritty repository already exists - skipping any git operations"
   when: alacritty_source_repo_exists
-  register: alacritty_fetch_result
-  changed_when: false
 
 - name: Show Alacritty repository status
   debug:

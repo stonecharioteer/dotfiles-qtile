@@ -7,10 +7,9 @@
   become_user: "{{ qtile_user }}"
   when: not qtile_venv_ready
 
-- name: Upgrade pip in virtual environment
+- name: Ensure pip is present in virtual environment (no upgrade)
   pip:
     name: pip
-    state: latest
     virtualenv: "{{ qtile_venv_path }}"
   become_user: "{{ qtile_user }}"
   when: not qtile_already_installed

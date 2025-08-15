@@ -1,10 +1,38 @@
 ---
+# GPU Detection
+- name: Check for NVIDIA GPU
+  shell: lspci | grep -i nvidia
+  register: nvidia_gpu_check
+  failed_when: false
+  changed_when: false
+
+- name: Check for AMD GPU
+  shell: lspci | grep -i amd
+  register: amd_gpu_check
+  failed_when: false
+  changed_when: false
+
+- name: Set GPU detection facts
+  set_fact:
+    has_nvidia_gpu: "{{ nvidia_gpu_check.rc == 0 }}"
+    has_amd_gpu: "{{ amd_gpu_check.rc == 0 }}"
+
+- name: Display GPU detection results
+  debug:
+    msg: |
+      === GPU DETECTION ===
+      NVIDIA GPU detected: {{ has_nvidia_gpu }}
+      AMD GPU detected: {{ has_amd_gpu }}
+
 - name: Install core desktop dependencies
   package:
     name:
       - rofi
       - dunst
       - picom
+      - nitrogen  # Wallpaper management
+      - feh  # Image viewer and wallpaper setter
+      - xclip  # Clipboard utility
       - xorg
       - lightdm
       - network-manager-gnome
@@ -14,15 +42,30 @@
       - copyq
       - libnotify-bin
       - cinnamon-screensaver
-      - xrandr
+      - x11-xserver-utils  # Contains xrandr, xset
       - xinput
-      - xset
-      - setxkbmap
+      - x11-xkb-utils  # Contains setxkbmap
       - upower  # For power monitoring functionality
       - powertop  # For detailed power analysis
-      - nvidia-smi  # For GPU power monitoring (if NVIDIA GPU present)
+      - conky-all  # System monitor for desktop overlay
     state: present
-    ignore_errors: yes  # Some packages might not be available on all systems
+  ignore_errors: yes  # Some packages might not be available on all systems
+
+- name: Install NVIDIA GPU packages
+  package:
+    name:
+      - nvidia-utils-535  # Provides nvidia-smi for GPU monitoring
+    state: present
+  when: has_nvidia_gpu
+  ignore_errors: yes
+
+- name: Install AMD GPU packages
+  package:
+    name:
+      - radeontop  # AMD GPU monitoring tool (alternative to amdgpu-top)
+    state: present
+  when: has_amd_gpu
+  ignore_errors: yes
 
 - name: Copy qtile.desktop session file
   copy:

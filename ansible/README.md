@@ -71,11 +71,14 @@ Log out and select "Qtile" from your display manager.
 
 ## Failsafe Behavior
 
-✅ **Safe Operations:**
-- If `~/.config/qtile` exists and is the correct repository → updates safely
-- If `/opt/qtile` venv exists with qtile installed → skips installation  
-- If Alacritty already built → skips compilation
-- Preserves local git branches and uncommitted changes
+✅ **Safe Operations - Install Once, Never Upgrade:**
+- If `~/.config/qtile` exists and is correct repository → **leaves it completely alone**
+- If `/opt/qtile` venv exists with qtile installed → **skips entirely**
+- If Alacritty already built → **skips compilation**
+- If packages already installed → **skips installation**
+- **Never** runs git fetch, pull, or any updates on existing repos
+- **Never** upgrades pip, rust, or any existing packages
+- Preserves all local git branches and uncommitted changes
 
 ❌ **Will Stop If:**
 - `~/.config/qtile` exists but isn't a git repository
@@ -83,7 +86,7 @@ Log out and select "Qtile" from your display manager.
 - `/opt/qtile` exists but isn't a valid Python virtual environment
 - `~/code/tools/alacritty` exists but isn't the Alacritty repository
 
-The playbook shows you exactly what it finds and what it will do before making changes.
+**Philosophy:** If it's already there and working, don't touch it. Only install what's missing.
 
 ## Testing Locally First
 

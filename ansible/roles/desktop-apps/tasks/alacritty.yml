@@ -21,12 +21,11 @@
   register: rust_installed
   become_user: "{{ qtile_user }}"
 
-- name: Download and install Rust
+- name: Download and install Rust (no updates)
   shell: |
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     source {{ qtile_home }}/.cargo/env
     rustup override set stable
-    rustup update stable
   become_user: "{{ qtile_user }}"
   when: not rust_installed.stat.exists
 

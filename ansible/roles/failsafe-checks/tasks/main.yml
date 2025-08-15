@@ -162,7 +162,7 @@
   set_fact:
     qtile_config_repo_exists: "{{ qtile_config_exists.stat.exists and qtile_is_git_repo.stat.exists }}"
     qtile_venv_ready: "{{ qtile_venv_exists.stat.exists and qtile_venv_valid.stat.exists }}"
-    qtile_already_installed: "{{ qtile_venv_ready and qtile_installed_check.stdout == 'installed' }}"
+    qtile_already_installed: "{{ qtile_venv_exists.stat.exists and qtile_venv_valid.stat.exists and qtile_installed_check is defined and qtile_installed_check.stdout == 'installed' }}"
     alacritty_source_repo_exists: "{{ alacritty_source_exists.stat.exists and alacritty_is_git_repo.stat.exists }}"
     alacritty_already_built: "{{ alacritty_binary_exists.stat.exists }}"
 
