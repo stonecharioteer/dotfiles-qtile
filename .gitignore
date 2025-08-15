@@ -244,3 +244,5 @@ __marimo__/
 
 # Alacritty themes (cloned from external repository)
 install/alacritty/themes/
+
+tmp/
