@@ -27,29 +27,30 @@
 - name: Install core desktop dependencies
   package:
     name:
-      - rofi
-      - dunst
-      - picom
-      - nitrogen  # Wallpaper management
-      - feh  # Image viewer and wallpaper setter
-      - xclip  # Clipboard utility
-      - xorg
-      - lightdm
-      - network-manager-gnome
-      - pavucontrol
-      - pasystray
-      - blueman
-      - copyq
-      - libnotify-bin
-      - cinnamon-screensaver
-      - x11-xserver-utils  # Contains xrandr, xset
-      - xinput
-      - x11-xkb-utils  # Contains setxkbmap
-      - upower  # For power monitoring functionality
-      - powertop  # For detailed power analysis
-      - conky-all  # System monitor for desktop overlay
-      - arandr  # GUI for monitor configuration
-      - autorandr  # Automatic monitor configuration switching
+      - arandr              # GUI for monitor configuration
+      - autorandr           # Automatic monitor configuration switching
+      - blueman             # Bluetooth manager
+      - cinnamon-screensaver  # Screen locker
+      - conky-all           # System monitor for desktop overlay
+      - copyq               # Clipboard manager
+      - dunst               # Notification daemon
+      - feh                 # Image viewer and wallpaper setter
+      - libnotify-bin       # Notification utilities
+      - lightdm             # Display manager
+      - network-manager-gnome  # Network management GUI
+      - nitrogen            # Wallpaper management
+      - pasystray           # PulseAudio system tray
+      - pavucontrol         # PulseAudio volume control
+      - picom               # Compositor
+      - powertop            # For detailed power analysis
+      - redshift            # Blue light filter
+      - rofi                # Application launcher
+      - upower              # For power monitoring functionality
+      - x11-xkb-utils       # Contains setxkbmap
+      - x11-xserver-utils   # Contains xrandr, xset
+      - xclip               # Clipboard utility
+      - xinput              # Input device configuration
+      - xorg                # X11 server
     state: present
   ignore_errors: yes  # Some packages might not be available on all systems
 
