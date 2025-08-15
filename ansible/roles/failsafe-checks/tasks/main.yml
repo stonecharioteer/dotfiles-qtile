@@ -166,14 +166,48 @@
     alacritty_source_repo_exists: "{{ alacritty_source_exists.stat.exists and alacritty_is_git_repo.stat.exists }}"
     alacritty_already_built: "{{ alacritty_binary_exists.stat.exists }}"
 
+# Hardware Detection for conditional features
+- name: Hardware detection for conditional features
+  block:
+    - name: Check for battery (primary laptop indicator)
+      stat:
+        path: /sys/class/power_supply/BAT0
+      register: battery_check
+
+    - name: Check for laptop DMI chassis type
+      shell: dmidecode -s chassis-type 2>/dev/null || echo "unknown"
+      register: chassis_type
+      ignore_errors: yes
+
+    - name: Check for laptop keywords in DMI product name
+      shell: dmidecode -s system-product-name 2>/dev/null | grep -i -E "(laptop|notebook|portable)" || echo "none"
+      register: product_name_check
+      ignore_errors: yes
+
+    - name: Set hardware detection facts
+      set_fact:
+        is_laptop: >-
+          {{
+            battery_check.stat.exists or
+            chassis_type.stdout in ['Notebook', 'Laptop', 'Portable'] or
+            product_name_check.stdout != "none"
+          }}
+
 - name: Display installation plan
   debug:
     msg: |
+      === HARDWARE DETECTION ===
+      System type: {{ 'LAPTOP' if is_laptop else 'DESKTOP' }}
+      Battery detected: {{ battery_check.stat.exists }}
+      Chassis type: {{ chassis_type.stdout }}
+      
       === INSTALLATION PLAN ===
       Qtile config: {{ 'UPDATE existing repository' if qtile_config_repo_exists else 'CLONE new repository' }}
       Python venv: {{ 'USE existing venv' if qtile_venv_ready else 'CREATE new venv' }}
       Qtile package: {{ 'SKIP - already installed' if qtile_already_installed else 'INSTALL qtile + psutil' }}
       Alacritty source: {{ 'UPDATE existing repository' if alacritty_source_repo_exists else 'CLONE new repository' }}
       Alacritty binary: {{ 'SKIP - already built' if alacritty_already_built else 'BUILD from source' }}
+      
+      {{ 'LAPTOP FEATURES: Battery monitoring, touchpad gestures, auto-rotation, sleep services' if is_laptop else 'DESKTOP FEATURES: Monitor management only (no laptop-specific features)' }}
       
       Proceeding with safe, non-destructive operations...
