@@ -1,96 +1,145 @@
-# Qtile Dotfiles
+# Qtile Desktop Environment
+
+A comprehensive qtile desktop environment with automated deployment via Ansible.
+
+## Quick Setup (Recommended)
+
+**Automated deployment using Ansible:**
 
 ```bash
-mkdir -p ~/Pictures/screenshots
-sudo apt install rofi
+# Clone repository
+git clone https://github.com/stonecharioteer/dotfiles-qtile.git ~/.config/qtile
+
+# Run automated setup
+cd ~/.config/qtile/ansible
+ansible-playbook qtile-setup.yml
+```
+
+This will automatically:
+- Install all dependencies and packages
+- Set up qtile environment at `/opt/qtile`  
+- Configure all applications via symlinks
+- Enable hardware-appropriate services
+- Set up fonts, themes, and desktop integration
+
+## Manual Setup (Advanced Users Only)
+
+If you prefer manual installation, here are the complete steps:
+
+```bash
+# 1. Install base system packages
+sudo apt install python3 python3-venv python3-pip build-essential git curl wget fish
+
+# 2. Create qtile environment
 sudo mkdir -p /opt/qtile
-sudo chown /opt/qtile stonecharioteer:stonecharioteer
-python -m venv /opt/qtile
-source /opt/qtile/bin/activate.fish
-pip install qtile psutil
-ln -s $PWD/install/rofi $HOME/.config/rofi
-ln -s $PWD/install/.icons $HOME/.icons
-sudo cp install/qtile.desktop /usr/share/xsessions/
-sudo chmod a+rx /opt/qtile/bin/qtile /opt/qtile/bin/python
+sudo chown $USER:$USER /opt/qtile
+python3 -m venv /opt/qtile
+source /opt/qtile/bin/activate
+pip install qtile==0.33.0 psutil
+
+# 3. Install core desktop packages
+sudo apt install rofi dunst picom nitrogen feh xclip xorg lightdm \
+  network-manager-gnome pavucontrol pasystray blueman copyq jq \
+  libnotify-bin cinnamon-screensaver x11-xserver-utils xinput \
+  x11-xkb-utils upower powertop conky-all arandr autorandr
+
+# 4. Install multimedia and hardware packages  
+sudo apt install pulseaudio-utils brightnessctl bc xbacklight lm-sensors touchegg
+
+# 5. Install fonts
+sudo apt install fontconfig fonts-jetbrains-mono
+# Or copy custom fonts: sudo cp -r install/fonts/JetBrainsMono/* /usr/share/fonts/truetype/jetbrainsmono/
+# sudo fc-cache -fv
+
+# 6. GPU-specific packages (if applicable)
+# For NVIDIA: sudo apt install nvidia-utils-535
+# For AMD: sudo apt install radeontop
+
+# 7. Set up Alacritty (optional - builds from source)
+sudo apt install cmake g++ pkg-config libfontconfig1-dev libxcb-xfixes0-dev \
+  libxkbcommon-dev gzip scdoc
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# Follow Alacritty build instructions in install/alacritty/
+
+# 8. Create all configuration symlinks
+ln -s ~/.config/qtile/install/alacritty ~/.config/alacritty
+ln -s ~/.config/qtile/install/auto-rotate ~/.config/auto-rotate
+ln -s ~/.config/qtile/install/conky ~/.config/conky  
+ln -s ~/.config/qtile/install/dunst ~/.config/dunst
+ln -s ~/.config/qtile/install/monitor-manager ~/.config/monitor-manager
+ln -s ~/.config/qtile/install/redshift ~/.config/redshift
+ln -s ~/.config/qtile/install/rofi ~/.config/rofi
+ln -s ~/.config/qtile/install/touchegg ~/.config/touchegg
+ln -s ~/.config/qtile/install/picom.conf ~/.config/picom.conf
+
+# 9. Set up desktop integration
+sudo cp ~/.config/qtile/install/qtile.desktop /usr/share/xsessions/
+sudo chmod +rx /opt/qtile/bin/qtile /opt/qtile/bin/python*
+sudo cp ~/.config/qtile/install/X11/40-libinput-touchpad.conf /etc/X11/xorg.conf.d/
+
+# 10. Enable services
+sudo systemctl enable touchegg
+sudo systemctl start touchegg
+# For laptops only: copy and enable suspend/auto-rotation services
 ```
 
-## Additional Configuration
+**Note:** The Ansible automation handles hardware detection, conditional installations, service configuration, and proper permissions automatically. Manual setup requires careful attention to system-specific requirements.
 
-### Battery Monitoring (Laptops Only)
-Configure battery monitoring to receive notifications when battery is low:
+## Features
 
-```bash
-# Make battery monitor script executable
-chmod +x install/battery-monitor.sh
+### Hardware-Aware Configuration
+The Ansible playbook automatically detects your system type and enables appropriate features:
 
-# Add to crontab to run every 10 minutes
-crontab -e
-# Add this line:
-*/10 * * * * /home/stonecharioteer/.config/qtile/install/battery-monitor.sh
-```
+**All Systems:**
+- Core desktop environment (qtile, rofi, picom, dunst)
+- Multimedia key bindings and notifications
+- Monitor management and multi-screen support
+- Touchpad gesture support (including USB trackpads)
+- GPU monitoring (NVIDIA/AMD detection)
+- Network and system monitoring widgets
 
-The script will send notifications when:
-- Battery drops below 30% (low battery warning)
-- Battery drops below 15% (critical battery warning)
+**Laptop-Specific Features:**
+- Battery monitoring with notifications
+- Intelligent suspend (only when using laptop screen alone)
+- Auto-rotation for tablet mode
+- Power consumption monitoring
+- Keyboard/touchpad disable in tablet mode
 
-Note: Notifications only appear when the battery is discharging (not while charging).
+**Desktop-Specific Features:**
+- No battery/suspend services
+- Optimized for external peripherals
+- Enhanced multi-monitor support
 
-### Sleep Functionality (Laptops Only)
-Configure intelligent laptop suspend that only triggers when using laptop screen alone:
+### Key Bindings
 
-```bash
-# Run the setup script to configure system-level settings
-./install/setup-sleep-functionality.sh
-```
+**System Controls:**
+- `Mod + Shift + n` - Notification history (with copy to clipboard)
+- `Mod + d` - Application launcher (rofi)
+- `Mod + Tab` - Window switcher
+- `XF86AudioMute/VolumeUp/VolumeDown` - Audio controls with notifications
+- `Mod + Shift + s` - Screenshot tool
 
-This will:
-- Configure systemd-logind to handle lid switch events
-- Enable automatic screen locking before suspend
-- Set up monitor-aware suspend (prevents suspend when external monitor connected)
-
-**Sleep Behavior:**
-- **Lid close with laptop screen only** → suspend + lock screen
-- **Lid close with external monitor** → no suspend (notification shown)
-- **Wake from suspend** → unlock screen to continue
-
-**Manual Testing:**
-```bash
-# Test monitor detection
-./install/monitor-aware-suspend.sh check
-
-# Test screen locking
-./install/suspend-lock.sh lock
-```
-
-**Logs:** Check `~/.cache/qtile-suspend.log` for suspend/resume activity debugging.
-
-### Touchpad Gestures (Laptops Only)
-Configure Mac-like touchpad gestures for pinch zoom and browser navigation:
-
-```bash
-# Run the setup script to configure touchpad gestures
-./install/setup-touchpad.sh
-```
-
-This will:
-- Enable pinch-to-zoom gestures in all applications
-- Enable 2-finger horizontal swipe for browser back/forward navigation
-- Configure X11 touchpad settings for optimal gesture recognition
-
-**Gesture Functionality:**
+**Touchpad Gestures (all systems):**
 - **2-finger pinch in/out** → Zoom in/out (Ctrl+Plus/Minus)
-- **2-finger swipe right** → Browser back (Alt+Left)
+- **2-finger swipe right** → Browser back (Alt+Left)  
 - **2-finger swipe left** → Browser forward (Alt+Right)
 
-**Important:** You need to restart your X11 session (log out and back in) for touchpad configuration changes to take effect.
+### Troubleshooting
 
-**Testing:**
+**If something isn't working:**
+1. Check that all dependencies are installed: `ansible-playbook qtile-setup.yml --check`
+2. Verify symlinks are created: `ls -la ~/.config/ | grep qtile`
+3. Check service status: `systemctl --user status auto-rotate.service` (laptops only)
+4. Review logs: `~/.cache/qtile-suspend.log`, `journalctl --user -u auto-rotate.service`
+
+**Manual commands (if Ansible deployment fails):**
 ```bash
-# Check touchegg service status
+# Install missing dependencies
+sudo apt install jq xclip dunst rofi picom
+
+# Test notification history
+~/.config/qtile/install/rofi/notification-history.sh
+
+# Test touchpad gestures
 systemctl status touchegg.service
-
-# Or check if touchegg daemon is running
-pgrep -x touchegg
-
-# Test in a web browser - try pinch gestures and horizontal swipes
 ```
