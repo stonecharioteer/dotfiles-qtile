@@ -14,11 +14,10 @@
     state: present
   ignore_errors: yes
 
-- name: Install touchpad gesture support (laptops only)
+- name: Install touchpad gesture support (all systems for USB trackpad support)
   package:
     name: touchegg
     state: present
-  when: is_laptop is defined and is_laptop
   ignore_errors: yes
 
 - name: Create .local/share/applications directory for user
