@@ -17,11 +17,24 @@
 - name: Install qtile and dependencies in virtual environment (if not already installed)
   pip:
     name:
-      - qtile
+      - qtile==0.33.0
       - psutil
     virtualenv: "{{ qtile_venv_path }}"
   become_user: "{{ qtile_user }}"
   when: not qtile_already_installed
+
+- name: Check current qtile version (if already installed)
+  shell: "{{ qtile_venv_path }}/bin/pip list | grep qtile | awk '{print $2}'"
+  register: current_qtile_version
+  when: qtile_already_installed
+  changed_when: false
+
+- name: Upgrade qtile to 0.33.0 if version mismatch
+  pip:
+    name: qtile==0.33.0
+    virtualenv: "{{ qtile_venv_path }}"
+  become_user: "{{ qtile_user }}"
+  when: qtile_already_installed and current_qtile_version.stdout != "0.33.0"
 
 - name: Display qtile installation status
   debug:

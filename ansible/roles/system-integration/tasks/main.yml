@@ -114,12 +114,11 @@
   args:
     creates: /etc/udev/rules.d/90-backlight.rules
 
-- name: Enable touchegg system service (laptops only)
+- name: Enable touchegg system service (all systems for USB trackpad support)
   systemd:
     name: touchegg.service
     enabled: yes
     state: started
-  when: is_laptop
   ignore_errors: yes
 
 - name: Enable laptop-specific systemd user services (laptops only)

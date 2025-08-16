@@ -48,6 +48,8 @@
       - upower  # For power monitoring functionality
       - powertop  # For detailed power analysis
       - conky-all  # System monitor for desktop overlay
+      - arandr  # GUI for monitor configuration
+      - autorandr  # Automatic monitor configuration switching
     state: present
   ignore_errors: yes  # Some packages might not be available on all systems
 

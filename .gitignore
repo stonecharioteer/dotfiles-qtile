@@ -245,4 +245,7 @@ __marimo__/
 # Alacritty themes (cloned from external repository)
 install/alacritty/themes/
 
+# Touchegg runtime lock files
+install/touchegg/.touchegg:*.lock
+
 tmp/

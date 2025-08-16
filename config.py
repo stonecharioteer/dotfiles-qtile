@@ -270,10 +270,13 @@ extension_defaults = widget_defaults.copy()
 
 def amdgpu_metadata():
     """Retrieves the amdgpu metadata"""
-    output = subprocess.check_output(
-        "amdgpu_top -J -d".split(), stderr=subprocess.DEVNULL
-    )
-    return json.loads(output)
+    try:
+        output = subprocess.check_output(
+            "amdgpu_top -J -d".split(), stderr=subprocess.DEVNULL
+        )
+        return json.loads(output)
+    except (subprocess.CalledProcessError, FileNotFoundError, json.JSONDecodeError):
+        return None
 
 
 def get_vram_usage():
@@ -634,7 +637,7 @@ def screen(main=False):
             else widget.Image(filename=images["python"], margin=5),
             sep(),
             # widget.Spacer(15),
-            widget.CurrentLayoutIcon(),
+            widget.CurrentLayout(mode="both", icon_first=False),
             sep(),
             widget.GroupBox(
                 highlight_method="block",
