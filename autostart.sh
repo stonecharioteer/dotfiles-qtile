@@ -1,6 +1,4 @@
 #!/bin/bash
-export XCURSOR_THEME=Adwaita
-export XCURSOR_SIZE=24
 
 # Hardware detection functions
 has_battery() {

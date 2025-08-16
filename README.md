@@ -1,30 +1,14 @@
 # Qtile Desktop Environment
 
-A comprehensive qtile desktop environment with automated deployment via Ansible.
+A comprehensive qtile desktop environment configuration.
 
-## Quick Setup (Recommended)
+## Installation
 
-**Automated deployment using Ansible:**
+**Recommended:** Use the Ansible playbooks in [stonecharioteer/distributed-dotfiles](https://github.com/stonecharioteer/distributed-dotfiles) for automated deployment.
 
-```bash
-# Clone repository
-git clone https://github.com/stonecharioteer/dotfiles-qtile.git ~/.config/qtile
+## Manual Setup
 
-# Run automated setup
-cd ~/.config/qtile/ansible
-ansible-playbook qtile-setup.yml
-```
-
-This will automatically:
-- Install all dependencies and packages
-- Set up qtile environment at `/opt/qtile`  
-- Configure all applications via symlinks
-- Enable hardware-appropriate services
-- Set up fonts, themes, and desktop integration
-
-## Manual Setup (Advanced Users Only)
-
-If you prefer manual installation, here are the complete steps:
+Manual installation steps:
 
 ```bash
 # 1. Install base system packages
@@ -83,12 +67,10 @@ sudo systemctl start touchegg
 # For laptops only: copy and enable suspend/auto-rotation services
 ```
 
-**Note:** The Ansible automation handles hardware detection, conditional installations, service configuration, and proper permissions automatically. Manual setup requires careful attention to system-specific requirements.
-
 ## Features
 
 ### Hardware-Aware Configuration
-The Ansible playbook automatically detects your system type and enables appropriate features:
+The configuration automatically detects your system type and enables appropriate features:
 
 **All Systems:**
 - Core desktop environment (qtile, rofi, picom, dunst)
@@ -127,12 +109,11 @@ The Ansible playbook automatically detects your system type and enables appropri
 ### Troubleshooting
 
 **If something isn't working:**
-1. Check that all dependencies are installed: `ansible-playbook qtile-setup.yml --check`
-2. Verify symlinks are created: `ls -la ~/.config/ | grep qtile`
-3. Check service status: `systemctl --user status auto-rotate.service` (laptops only)
-4. Review logs: `~/.cache/qtile-suspend.log`, `journalctl --user -u auto-rotate.service`
+1. Verify symlinks are created: `ls -la ~/.config/ | grep qtile`
+2. Check service status: `systemctl --user status auto-rotate.service` (laptops only)
+3. Review logs: `~/.cache/qtile-suspend.log`, `journalctl --user -u auto-rotate.service`
 
-**Manual commands (if Ansible deployment fails):**
+**Manual commands:**
 ```bash
 # Install missing dependencies
 sudo apt install jq xclip dunst rofi picom
