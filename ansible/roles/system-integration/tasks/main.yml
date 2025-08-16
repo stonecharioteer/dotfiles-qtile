@@ -44,10 +44,14 @@
     group: "{{ qtile_user }}"
     force: yes  # Replace existing symlinks
   loop:
-    - dunst
-    - touchegg
-    - rofi
+    - alacritty
+    - auto-rotate
     - conky
+    - dunst
+    - monitor-manager
+    - redshift
+    - rofi
+    - touchegg
   become_user: "{{ qtile_user }}"
 
 - name: Check for existing standalone config files
@@ -151,10 +155,14 @@
     msg: |
       === CONFIGURATION SYMLINKS CREATED ===
       Directory symlinks (entire folders managed by git):
-      ~/.config/dunst -> ~/.config/qtile/install/dunst
-      ~/.config/touchegg -> ~/.config/qtile/install/touchegg  
-      ~/.config/rofi -> ~/.config/qtile/install/rofi
+      ~/.config/alacritty -> ~/.config/qtile/install/alacritty
+      ~/.config/auto-rotate -> ~/.config/qtile/install/auto-rotate
       ~/.config/conky -> ~/.config/qtile/install/conky
+      ~/.config/dunst -> ~/.config/qtile/install/dunst
+      ~/.config/monitor-manager -> ~/.config/qtile/install/monitor-manager
+      ~/.config/redshift -> ~/.config/qtile/install/redshift
+      ~/.config/rofi -> ~/.config/qtile/install/rofi
+      ~/.config/touchegg -> ~/.config/qtile/install/touchegg
       
       File symlinks:
       ~/.config/picom.conf -> ~/.config/qtile/install/picom.conf
