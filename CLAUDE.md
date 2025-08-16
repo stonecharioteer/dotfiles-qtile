@@ -61,12 +61,6 @@ NEVER proactively create documentation files (*.md) or README files. Only create
 - **Font assets**: `fonts/JetBrainsMono/` directory with complete Nerd Font collection
 - **Integration pattern**: Self-contained scripts for system-wide functionality
 
-### Ansible Automation in ansible/
-- **Complete deployment**: `qtile-setup.yml` main playbook with 7 specialized roles
-- **Role structure**: locale-setup, base-system, python-environment, qtile-desktop, fonts, desktop-apps, system-integration
-- **Remote deployment**: Clones repository and sets up environment on target machines
-- **Alacritty build**: Source compilation with full desktop integration at `~/code/tools/alacritty`
-- **Inventory management**: `inventory/hosts.yml` for multi-machine deployment
 
 ### Conditional Functionality Patterns
 - Hardware detection before enabling features (battery, GPU, monitors)
@@ -160,24 +154,8 @@ The user-level services are automatically enabled via autostart.sh on qtile star
   - Tablet mode disables keyboard/touchpad, enables touch-only interaction
 
 ### 2025-08-15
-- Implemented comprehensive Ansible automation for qtile deployment:
-  - Created complete Ansible playbook structure with 7 specialized roles
-  - Locale-first setup ensuring US UTF-8 across all systems 
-  - Automated Python environment creation at `/opt/qtile` with qtile + psutil
-  - Fish shell configuration as default for stonecharioteer user
-  - Full Alacritty build from source with desktop integration at `~/code/tools/alacritty`
-  - Rust toolchain installation for Alacritty compilation
-  - JetBrainsMono Nerd Fonts installation from `install/fonts/` directory
-  - Complete qtile configuration deployment via GitHub repository cloning
-  - Hardware-specific features (battery monitoring, touchpad gestures, auto-rotation)
-  - Systemd services, cron jobs, and permissions automation
-  - Power monitoring dependencies (upower, powertop, nvidia-smi)
-- Remote deployment capability:
-  - Playbook clones `stonecharioteer/dotfiles-qtile` directly to `~/.config/qtile` on target machines
-  - SSH key or GitHub CLI authentication options
-  - No manual file copying required - everything fetched from GitHub
-  - Support for multiple machine deployment via Ansible inventory
-  - Simple README with minimal setup requirements
+- Removed Ansible automation - moved to ~/code/checkouts/personal/distributed-dotfiles/
+- Maintained manual setup documentation in README.md
 
 ## Gameplan / Todo Items
 
@@ -196,4 +174,3 @@ The user-level services are automatically enabled via autostart.sh on qtile star
 - [ ] **ASUS ROG laptop-specific controls** - Research and implement laptop-specific function key mappings
 - [ ] **Performance profile integration** - Connect fan curves to system performance modes if available
 - [ ] **Advanced power management** - Integrate fan controls with existing battery monitoring system
-- always use ssh based cloning in ansible playbooks for github
