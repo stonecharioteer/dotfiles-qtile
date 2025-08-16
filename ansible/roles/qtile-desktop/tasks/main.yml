@@ -40,6 +40,7 @@
       - pasystray
       - blueman
       - copyq
+      - jq  # JSON parser for notification history
       - libnotify-bin
       - cinnamon-screensaver
       - x11-xserver-utils  # Contains xrandr, xset
