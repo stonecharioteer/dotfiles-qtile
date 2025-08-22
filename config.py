@@ -558,6 +558,58 @@ def get_ip_address():
         return "IP: Error"
 
 
+def get_ip_ssid_info():
+    """Get IP and SSID information stacked"""
+    import subprocess
+    import re
+    
+    # Get IP address
+    ip_info = "No connection"
+    try:
+        result = subprocess.run(['ip', 'route', 'get', '8.8.8.8'], 
+                              capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            match = re.search(r'src\s+(\d+\.\d+\.\d+\.\d+)', result.stdout)
+            if match:
+                ip = match.group(1)
+                dev_match = re.search(r'dev\s+(\w+)', result.stdout)
+                interface = dev_match.group(1) if dev_match else "unknown"
+                ip_info = f"{ip} ({interface})"
+    except Exception:
+        ip_info = "Error"
+    
+    # Get SSID
+    ssid_info = "No WiFi"
+    try:
+        # Try nmcli first
+        result = subprocess.run(['nmcli', '-t', '-f', 'active,ssid', 'dev', 'wifi'], 
+                              capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            for line in result.stdout.strip().split('\n'):
+                if line.startswith('yes:'):
+                    ssid = line.split(':', 1)[1]
+                    ssid_info = ssid if ssid else "No SSID"
+                    break
+        
+        # Fallback to iwgetid if nmcli didn't work
+        if ssid_info == "No WiFi":
+            result = subprocess.run(['iwgetid', '-r'], 
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode == 0 and result.stdout.strip():
+                ssid_info = result.stdout.strip()
+    except Exception:
+        ssid_info = "Error"
+    
+    # Calculate padding for left alignment
+    lines = [ip_info, ssid_info]
+    max_length = max(len(line) for line in lines)
+    
+    # Pad shorter lines to match the longest line
+    padded_lines = [line.ljust(max_length) for line in lines]
+    
+    return "\n".join(padded_lines)
+
+
 def get_hostname():
     """Get the system hostname"""
     import socket
@@ -621,7 +673,7 @@ def screen(main=False):
             sep(),
             widget.GenPollText(func=get_hostname, update_interval=3600, fontsize=16),
             sep(),
-            widget.GenPollText(func=get_ip_address, update_interval=300, fontsize=16),
+            widget.GenPollText(func=get_ip_ssid_info, update_interval=15, fontsize=10),
         ])
     
     bottom_widgets.extend([
