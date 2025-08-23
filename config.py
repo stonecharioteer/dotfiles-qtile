@@ -7,6 +7,8 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import datetime
+from pathlib import Path
 from libqtile.core.manager import Qtile
 from libqtile import bar, layout, widget, hook
 from libqtile.config import Key, Group, Screen, Match, Click, Drag
@@ -31,6 +33,13 @@ images = {
 }
 mod = "mod4"  # super key is modifier
 terminal = "alacritty"
+
+
+def get_screenshot_filename():
+    """Generate screenshot filename using pathlib"""
+    screenshots_dir = Path.home() / "Pictures" / "screenshots"
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    return str(screenshots_dir / f"{timestamp}.png")
 
 
 def multimedia_cmd(command, notification_title, notification_body=None, get_status_cmd=None):
@@ -166,7 +175,7 @@ keys = [
         desc="Screenshot",
     ),
     Key(
-        [mod, "shift"],
+        [mod, "mod1"],
         "l",
         lazy.spawn("cinnamon-screensaver-command --lock"),
         desc="Lock screen",
@@ -534,6 +543,8 @@ def toggle_tablet_mode(qtile):
                     widget.update(tablet_toggle.get_status_text())
 
 
+
+
 def get_ip_address():
     """Get the current IP address from WiFi or Ethernet connection"""
     import subprocess
@@ -688,7 +699,16 @@ def screen(main=False):
             if main
             else widget.Image(filename=images["python"], margin=5),
             sep(),
-            # widget.Spacer(15),
+            widget.TextBox(
+                text="✂️",
+                name="screenshot_button",
+                mouse_callbacks={"Button1": lazy.spawn(["sh", "-c", "sleep 0.2 && scrot --select --line mode=edge ~/Pictures/screenshots/$(date +%Y-%m-%d_%H-%M-%S).png && notify-send 'Screenshot' 'Region saved'"])},
+                fontsize=20,
+                padding=8,
+                background=colors["dark_slate_blue"],
+                foreground="#ffffff",
+            ),
+            sep(),
             widget.CurrentLayout(mode="both", icon_first=False),
             sep(),
             widget.GroupBox(
