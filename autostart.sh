@@ -26,6 +26,9 @@ setxkbmap -option caps:escape -option shift:both_capslock
 xset r rate 200 35 &
 xset s off -dpms &
 
+# ensure screenshots directory exists
+mkdir -p ~/Pictures/screenshots
+
 # enable touchpad gestures (works with USB trackpads too)
 pgrep -f "touchegg$" >/dev/null || touchegg &
 
