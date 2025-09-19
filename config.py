@@ -246,7 +246,9 @@ keys = [
         desc="App launcher",
     ),
     Key([mod], "period", move_mouse_to_next_monitor(), desc="Focus next screen"),
-    Key([mod, "shift"], "slash", highlight_mouse_cursor(), desc="Highlight mouse cursor"),
+    Key(
+        [mod, "shift"], "slash", highlight_mouse_cursor(), desc="Highlight mouse cursor"
+    ),
     Key(
         [mod, "shift"],
         "p",
@@ -413,9 +415,10 @@ for i in groups:
     )
 
 layouts = [
-    layout.MonadTall(border_focus=colors["burgandy"], border_width=2, margin=8),
-    layout.Columns(border_focus_stack=[colors["burgandy"], "#8f3d3d"], border_width=4),
-    layout.Tile(),
+    layout.Columns(
+        border_focus_stack=[colors["burgandy"], "#8f3d3d"], border_width=2, margin=2
+    ),
+    layout.Tile(border_focus=colors["burgandy"], border_width=2, margin=2),
     layout.Max(),
 ]
 
