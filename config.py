@@ -396,7 +396,20 @@ keys = [
     Key([mod], "z", lazy.screen.toggle_group(), desc="Toggle to last used workspace"),
 ]
 
-groups = [Group(str(i)) for i in range(1, 10)]
+workspace_configs = [
+    ("1", "1🏠"),     # General workspace
+    ("2", "2🌐"),     # Websites
+    ("3", "3💻"),     # Terminal/Development
+    ("4", "4👥"),     # Socials
+    ("5", "5💬"),     # Chat
+    ("6", "6🎨"),     # Creative
+    ("7", "7🎵"),     # Media/Entertainment
+    ("8", "8📁"),     # Files/Documents
+    ("9", "9⚙️"),     # Settings/System
+    ("0", "0🔧"),     # Utilities
+]
+
+groups = [Group(name=key, label=emoji) for key, emoji in workspace_configs]
 for i in groups:
     keys.extend(
         [
