@@ -393,6 +393,7 @@ keys = [
         ),
         desc="Show window switcher",
     ),
+    Key([mod], "z", lazy.screen.toggle_group(), desc="Toggle to last used workspace"),
 ]
 
 groups = [Group(str(i)) for i in range(1, 10)]
