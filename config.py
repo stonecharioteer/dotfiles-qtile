@@ -11,7 +11,7 @@ import datetime
 from pathlib import Path
 from libqtile.core.manager import Qtile
 from libqtile import bar, layout, widget, hook
-from libqtile.config import Key, Group, Screen, Match, Click, Drag
+from libqtile.config import Key, Group, Screen, Match, Click, Drag, ScratchPad, DropDown
 from libqtile.lazy import lazy
 
 colors = {
@@ -394,6 +394,7 @@ keys = [
         desc="Show window switcher",
     ),
     Key([mod], "z", lazy.screen.toggle_group(), desc="Toggle to last used workspace"),
+    Key([mod], "grave", lazy.group["scratchpad"].dropdown_toggle("btop"), desc="Toggle btop"),
 ]
 
 workspace_configs = [
@@ -410,6 +411,19 @@ workspace_configs = [
 ]
 
 groups = [Group(name=key, label=emoji) for key, emoji in workspace_configs]
+
+# Add scratchpad for btop
+groups.append(
+    ScratchPad("scratchpad", [
+        DropDown("btop", f"{terminal} -e btop",
+                 width=0.8,
+                 height=0.85,
+                 x=0.1,
+                 y=0.075,
+                 opacity=0.95)
+    ])
+)
+
 for i in groups:
     keys.extend(
         [
