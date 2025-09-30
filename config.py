@@ -425,6 +425,9 @@ groups.append(
 )
 
 for i in groups:
+    # Skip scratchpad when creating workspace keybindings
+    if isinstance(i, ScratchPad):
+        continue
     keys.extend(
         [
             Key(
