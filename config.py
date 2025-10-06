@@ -110,18 +110,16 @@ def multimedia_cmd(
 
 @lazy.function
 def move_mouse_to_next_monitor(qtile: Qtile):
-    """Moves the mouse position to the next screen by calculating the position of the centre of the screen."""
+    """Switch to next screen and move mouse to follow."""
     import time
 
-    screen_count = len(qtile.screens)
+    # First, switch screen focus using qtile's native method
+    qtile.focus_screen((qtile.current_screen.index + 1) % len(qtile.screens))
+
+    # Then move mouse to the now-focused screen
     current_screen = qtile.current_screen
-    current_index = next(
-        (i for i, s in enumerate(qtile.screens) if s == current_screen), 0
-    )
-    next_index = (current_index + 1) % screen_count
-    next_screen = qtile.screens[next_index]
-    x = next_screen.x + next_screen.width // 2
-    y = next_screen.y + next_screen.height // 2
+    x = current_screen.x + current_screen.width // 2
+    y = current_screen.y + current_screen.height // 2
 
     # Wiggle the mouse 10 pixels left, then right, then center
     qtile.core.warp_pointer(x - 10, y)
