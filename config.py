@@ -110,23 +110,21 @@ def multimedia_cmd(
 
 @lazy.function
 def move_mouse_to_next_monitor(qtile: Qtile):
-    """Switch to next screen and move mouse to follow."""
-    import time
+    """Switch to next screen and move mouse to center."""
+    qtile.cmd_next_screen()
 
-    # First, switch screen focus using qtile's native method
-    qtile.focus_screen((qtile.current_screen.index + 1) % len(qtile.screens))
+    # Save current window focus before moving mouse
+    current_window = qtile.current_window
 
-    # Then move mouse to the now-focused screen
+    # Move mouse to center of the new screen (single movement, no wiggle)
     current_screen = qtile.current_screen
     x = current_screen.x + current_screen.width // 2
     y = current_screen.y + current_screen.height // 2
-
-    # Wiggle the mouse 10 pixels left, then right, then center
-    qtile.core.warp_pointer(x - 10, y)
-    time.sleep(0.05)  # 50ms delay
-    qtile.core.warp_pointer(x + 10, y)
-    time.sleep(0.05)  # 50ms delay
     qtile.core.warp_pointer(x, y)
+
+    # Restore focus to the window that should be active
+    if current_window:
+        qtile.current_group.focus(current_window)
 
 
 @lazy.function
@@ -962,6 +960,12 @@ def screen(main=False):
             sep(),
             widget.CurrentLayout(mode="both", icon_first=False),
             sep(),
+            widget.CurrentScreen(
+                active_text="🟢",
+                inactive_text="⚫",
+                active_color=colors["burgandy"],
+                inactive_color="#666666",
+            ),
             widget.GroupBox(
                 highlight_method="block",
                 disable_drag=True,
