@@ -128,6 +128,15 @@ def move_mouse_to_next_monitor(qtile: Qtile):
 
 
 @lazy.function
+def move_group_to_next_screen(qtile: Qtile):
+    """Move current workspace to next screen."""
+    if len(qtile.screens) > 1:
+        current_screen_index = qtile.screens.index(qtile.current_screen)
+        next_screen_index = (current_screen_index + 1) % len(qtile.screens)
+        qtile.current_group.toscreen(next_screen_index)
+
+
+@lazy.function
 def highlight_mouse_cursor(qtile: Qtile):
     """Highlight mouse cursor by moving it in a small spiral and back to original position."""
     import time
@@ -242,8 +251,9 @@ keys = [
         desc="App launcher",
     ),
     Key([mod], "period", move_mouse_to_next_monitor(), desc="Focus next screen"),
+    Key([mod, "shift"], "period", move_group_to_next_screen(), desc="Move workspace to next screen"),
     Key(
-        [mod, "shift"], "slash", highlight_mouse_cursor(), desc="Highlight mouse cursor"
+        [mod, "shift"], "slash", lazy.group["scratchpad"].dropdown_toggle("help"), desc="Toggle help popup"
     ),
     Key(
         [mod, "shift"],
@@ -322,56 +332,10 @@ keys = [
         desc="Toggle microphone mute",
     ),
     Key(
-        [],
-        "XF86MonBrightnessDown",
-        lazy.function(
-            multimedia_cmd(
-                "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); new=$((current - max/20)); [ $new -lt 0 ] && new=0; echo $new > /sys/class/backlight/nvidia_0/brightness'",
-                "🔅 Brightness",
-                "Screen brightness",
-                "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); echo \"$((current * 100 / max))%\"'",
-            )
-        ),
-        desc="Lower screen brightness",
-    ),
-    Key(
-        [],
-        "XF86MonBrightnessUp",
-        lazy.function(
-            multimedia_cmd(
-                "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); new=$((current + max/20)); [ $new -gt $max ] && new=$max; echo $new > /sys/class/backlight/nvidia_0/brightness'",
-                "🔆 Brightness",
-                "Screen brightness",
-                "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); echo \"$((current * 100 / max))%\"'",
-            )
-        ),
-        desc="Raise screen brightness",
-    ),
-    Key(
-        [],
-        "XF86KbdBrightnessDown",
-        lazy.function(
-            multimedia_cmd(
-                "bash -c 'current=$(cat /sys/class/leds/asus::kbd_backlight/brightness); new=$((current - 1)); [ $new -lt 0 ] && new=0; echo $new > /sys/class/leds/asus::kbd_backlight/brightness'",
-                "⌨️ Keyboard",
-                "Backlight",
-                "bash -c 'echo \"Level $(cat /sys/class/leds/asus::kbd_backlight/brightness)\"'",
-            )
-        ),
-        desc="Lower keyboard backlight",
-    ),
-    Key(
-        [],
-        "XF86KbdBrightnessUp",
-        lazy.function(
-            multimedia_cmd(
-                "bash -c 'current=$(cat /sys/class/leds/asus::kbd_backlight/brightness); max=$(cat /sys/class/leds/asus::kbd_backlight/max_brightness); new=$((current + 1)); [ $new -gt $max ] && new=$max; echo $new > /sys/class/leds/asus::kbd_backlight/brightness'",
-                "⌨️ Keyboard",
-                "Backlight",
-                "bash -c 'echo \"Level $(cat /sys/class/leds/asus::kbd_backlight/brightness)\"'",
-            )
-        ),
-        desc="Lower keyboard backlight",
+        [mod, "shift"],
+        "b",
+        lazy.spawn(os.path.expanduser("~/.config/qtile/install/rofi/brightness.sh")),
+        desc="Brightness menu",
     ),
     Key(
         [],
@@ -408,10 +372,16 @@ workspace_configs = [
 
 groups = [Group(name=key, label=emoji) for key, emoji in workspace_configs]
 
-# Add scratchpad for btop
+# Add scratchpad for btop and help
 groups.append(
     ScratchPad("scratchpad", [
         DropDown("btop", f"{terminal} -e btop",
+                 width=0.8,
+                 height=0.85,
+                 x=0.1,
+                 y=0.075,
+                 opacity=0.95),
+        DropDown("help", f"{terminal} -e glow -p {os.path.expanduser('~/.config/qtile/SHORTCUTS.md')}",
                  width=0.8,
                  height=0.85,
                  x=0.1,
