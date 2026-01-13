@@ -332,56 +332,10 @@ keys = [
         desc="Toggle microphone mute",
     ),
     Key(
-        [],
-        "XF86MonBrightnessDown",
-        lazy.function(
-            multimedia_cmd(
-                "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); new=$((current - max/20)); [ $new -lt 0 ] && new=0; echo $new > /sys/class/backlight/nvidia_0/brightness'",
-                "🔅 Brightness",
-                "Screen brightness",
-                "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); echo \"$((current * 100 / max))%\"'",
-            )
-        ),
-        desc="Lower screen brightness",
-    ),
-    Key(
-        [],
-        "XF86MonBrightnessUp",
-        lazy.function(
-            multimedia_cmd(
-                "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); new=$((current + max/20)); [ $new -gt $max ] && new=$max; echo $new > /sys/class/backlight/nvidia_0/brightness'",
-                "🔆 Brightness",
-                "Screen brightness",
-                "bash -c 'current=$(cat /sys/class/backlight/nvidia_0/brightness); max=$(cat /sys/class/backlight/nvidia_0/max_brightness); echo \"$((current * 100 / max))%\"'",
-            )
-        ),
-        desc="Raise screen brightness",
-    ),
-    Key(
-        [],
-        "XF86KbdBrightnessDown",
-        lazy.function(
-            multimedia_cmd(
-                "bash -c 'current=$(cat /sys/class/leds/asus::kbd_backlight/brightness); new=$((current - 1)); [ $new -lt 0 ] && new=0; echo $new > /sys/class/leds/asus::kbd_backlight/brightness'",
-                "⌨️ Keyboard",
-                "Backlight",
-                "bash -c 'echo \"Level $(cat /sys/class/leds/asus::kbd_backlight/brightness)\"'",
-            )
-        ),
-        desc="Lower keyboard backlight",
-    ),
-    Key(
-        [],
-        "XF86KbdBrightnessUp",
-        lazy.function(
-            multimedia_cmd(
-                "bash -c 'current=$(cat /sys/class/leds/asus::kbd_backlight/brightness); max=$(cat /sys/class/leds/asus::kbd_backlight/max_brightness); new=$((current + 1)); [ $new -gt $max ] && new=$max; echo $new > /sys/class/leds/asus::kbd_backlight/brightness'",
-                "⌨️ Keyboard",
-                "Backlight",
-                "bash -c 'echo \"Level $(cat /sys/class/leds/asus::kbd_backlight/brightness)\"'",
-            )
-        ),
-        desc="Lower keyboard backlight",
+        [mod, "shift"],
+        "b",
+        lazy.spawn(os.path.expanduser("~/.config/qtile/install/rofi/brightness.sh")),
+        desc="Brightness menu",
     ),
     Key(
         [],
