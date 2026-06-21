@@ -1,0 +1,11 @@
+[Unit]
+Description=Periodically enforce battery charge limit
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=15min
+Unit=battery-charge-limit.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target
