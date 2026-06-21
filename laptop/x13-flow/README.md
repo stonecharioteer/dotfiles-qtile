@@ -160,10 +160,12 @@ Run:
 ./install-asus-linux-tools.sh
 ```
 
-Optional heavier install including `asusctl`/`asusd`:
+By default this installs both `supergfxctl/supergfxd` and `asusctl/asusd`, but it skips tools that are already installed. It only rebuilds/updates existing tools if `--update` is passed.
 
 ```bash
-INSTALL_ASUSCTL=1 ./install-asus-linux-tools.sh
+./install-asus-linux-tools.sh          # install missing tools only
+./install-asus-linux-tools.sh --update # update/rebuild from source
+INSTALL_ASUSCTL=0 ./install-asus-linux-tools.sh # skip asusctl/asusd
 ```
 
 Useful commands after install:
@@ -172,6 +174,10 @@ Useful commands after install:
 supergfxctl -g
 sudo supergfxctl -m Integrated
 sudo supergfxctl -m Hybrid
+asusctl profile list
+asusctl profile get
+sudo asusctl profile set Balanced
+sudo asusctl profile set Quiet
 ```
 
 Reboot after changing graphics mode.
