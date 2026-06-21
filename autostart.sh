@@ -24,7 +24,15 @@ setxkbmap -option caps:escape -option shift:both_capslock
 
 # start other background services
 xset r rate 200 35 &
-xset s off -dpms &
+
+# Enable display power management so the laptop panel can sleep while the
+# machine continues running. Useful for tent-mode/headless-server use.
+# Timings are: screensaver blank after 5 min, DPMS standby after 5 min,
+# suspend after 10 min, and power off after 15 min.
+xset s blank &
+xset s 300 300 &
+xset +dpms &
+xset dpms 300 600 900 &
 
 # ensure screenshots directory exists
 mkdir -p ~/Pictures/screenshots
