@@ -1,0 +1,7 @@
+[Unit]
+Description=Log battery metrics for later analysis
+ConditionPathExistsGlob=/sys/class/power_supply/BAT*
+
+[Service]
+Type=oneshot
+ExecStart=%h/.config/qtile/install/battery-logger.sh
