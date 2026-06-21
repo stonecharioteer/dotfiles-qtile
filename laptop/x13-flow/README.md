@@ -24,6 +24,8 @@ cd ~/.config/qtile/laptop/x13-flow
 ./disable-nvidia-dgpu.sh
 ./setup-hang-monitoring.sh
 ./enable-lightdm-display-sleep.sh
+# Optional: install ASUS Linux graphics tooling if PRIME mode is insufficient
+./install-asus-linux-tools.sh
 ```
 
 Then reboot when convenient:
@@ -143,6 +145,36 @@ Expected contents:
 blacklist nouveau
 options nouveau modeset=0
 ```
+
+### `install-asus-linux-tools.sh`
+
+Installs `supergfxctl` from upstream source. `supergfxctl`/`supergfxd` can control ASUS hybrid graphics/MUX modes more reliably than Ubuntu's `prime-select` on some ROG laptops.
+
+Why needed: after using `prime-select intel`, this machine exposed no `/sys/class/backlight` device and LightDM/Xorg appeared to run on a simple framebuffer. `supergfxctl` may switch the laptop into a cleaner integrated-only graphics mode.
+
+The old ASUS Linux OBS apt repo returned 404 for Mint 22/Ubuntu 24.04, so this script cleans any failed repo entry and builds from source instead.
+
+Run:
+
+```bash
+./install-asus-linux-tools.sh
+```
+
+Optional heavier install including `asusctl`/`asusd`:
+
+```bash
+INSTALL_ASUSCTL=1 ./install-asus-linux-tools.sh
+```
+
+Useful commands after install:
+
+```bash
+supergfxctl -g
+sudo supergfxctl -m Integrated
+sudo supergfxctl -m Hybrid
+```
+
+Reboot after changing graphics mode.
 
 ### `enable-lightdm-display-sleep.sh`
 

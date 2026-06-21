@@ -24,7 +24,10 @@ sudo chmod 0755 /etc/lightdm/scripts/display-sleep.sh
 
 sudo tee /etc/lightdm/lightdm.conf.d/99-display-sleep.conf >/dev/null <<'EOF'
 [Seat:*]
+# Apply once when the X server starts, then again after the greeter starts.
+# Some greeters reset screensaver/DPMS settings, so both hooks are intentional.
 display-setup-script=/etc/lightdm/scripts/display-sleep.sh
+greeter-setup-script=/etc/lightdm/scripts/display-sleep.sh
 EOF
 
 printf 'Done. Takes effect after restarting LightDM or rebooting.\n'
