@@ -47,7 +47,7 @@ def multimedia_cmd(
 ):
     """Execute multimedia command and show notification with current status"""
 
-    def execute():
+    def execute(qtile=None):
         try:
             # Execute the main command
             subprocess.run(command, shell=True, check=True, capture_output=True)
@@ -323,14 +323,15 @@ keys = [
         ),
         desc="Raise volume and unmute",
     ),
-    Key(
-        [],
-        "F20",
-        lazy.spawn(
-            'sh -c \'pactl set-source-mute @DEFAULT_SOURCE@ toggle; mic_status=$(pactl get-source-mute @DEFAULT_SOURCE@ | cut -d" " -f2); if [ "$mic_status" = "yes" ]; then notify-send "🎤 Microphone" "Muted"; else notify-send "🎤 Microphone" "Unmuted"; fi\''
-        ),
-        desc="Toggle microphone mute",
-    ),
+    # F20 key not recognized by X server - commented out
+    # Key(
+    #     [],
+    #     "F20",
+    #     lazy.spawn(
+    #         'sh -c \'pactl set-source-mute @DEFAULT_SOURCE@ toggle; mic_status=$(pactl get-source-mute @DEFAULT_SOURCE@ | cut -d" " -f2); if [ "$mic_status" = "yes" ]; then notify-send "🎤 Microphone" "Muted"; else notify-send "🎤 Microphone" "Unmuted"; fi\''
+    #     ),
+    #     desc="Toggle microphone mute",
+    # ),
     Key(
         [mod, "shift"],
         "b",
@@ -903,7 +904,7 @@ def screen(main=False):
         ]
     )
 
-    bottom = bar.Bar(bottom_widgets, 36, margin=5, background=colors["bar"])
+    bottom = bar.Bar(bottom_widgets, 36, margin=5, background=colors["bar"], opacity=1.0)
     top = bar.Bar(
         [
             widget.Image(filename=images["linux-mint"], margin=5)
@@ -968,6 +969,7 @@ def screen(main=False):
         36,
         margin=5,
         background=colors["bar"],
+        opacity=1.0,
     )
     if main:
         return Screen(top=top, bottom=bottom)
