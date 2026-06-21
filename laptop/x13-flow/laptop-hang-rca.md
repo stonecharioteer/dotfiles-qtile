@@ -194,6 +194,36 @@ Battery: ~59%, threshold=60
 Recent kernel warnings/errors: none
 ```
 
+Later update after installing `supergfxctl` and switching graphics mode:
+
+```text
+supergfxctl -g: Integrated
+prime-select query: intel
+nvidia-smi: NVIDIA driver not running
+/sys/class/backlight/amdgpu_bl1 exists
+/sys/class/drm/card1-eDP-1 connected/enabled
+```
+
+This fixed the earlier bad display-routing state where LightDM/Xorg was using a simple framebuffer and no real `/sys/class/backlight` device existed. After `sudo supergfxctl -m Integrated` and reboot, the login-screen display timeout worked: the screen/backlight turned off and pressing a laptop key woke it.
+
+Fan/performance controls available through kernel platform profiles:
+
+```text
+/sys/firmware/acpi/platform_profile_choices: quiet balanced performance
+/sys/firmware/acpi/platform_profile: balanced
+```
+
+Useful commands:
+
+```bash
+cat /sys/firmware/acpi/platform_profile_choices
+cat /sys/firmware/acpi/platform_profile
+echo quiet | sudo tee /sys/firmware/acpi/platform_profile
+echo balanced | sudo tee /sys/firmware/acpi/platform_profile
+echo performance | sudo tee /sys/firmware/acpi/platform_profile
+sensors
+```
+
 ## If it hangs/reboots again
 
 After reboot, collect:
