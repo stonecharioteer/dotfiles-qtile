@@ -224,6 +224,50 @@ echo performance | sudo tee /sys/firmware/acpi/platform_profile
 sensors
 ```
 
+TTY/headless screen-off notes after disabling LightDM:
+
+- Physical console is usually `tty1`; SSH sessions are `pts/*`.
+- `setterm --blank/--powerdown` did not reliably blank/power off the laptop panel.
+- Kernel consoleblank was already set to `60`, but that did not visibly power off the panel.
+- Direct backlight sysfs control works, but may have a delayed visible effect.
+
+Observed working manual screen-off method in text-console/headless mode:
+
+```bash
+echo 4 | sudo tee /sys/class/backlight/amdgpu_bl1/bl_power
+echo 0 | sudo tee /sys/class/backlight/amdgpu_bl1/brightness
+echo 1 | sudo tee /sys/class/graphics/fb0/blank
+```
+
+The backlight-only commands set `bl_power=4`, `brightness=0`, and `actual_brightness=0`, but the panel still appeared active. Adding framebuffer blanking via `/sys/class/graphics/fb0/blank` made `--off` visibly work.
+
+Restore from SSH:
+
+```bash
+echo 0 | sudo tee /sys/class/graphics/fb0/blank
+echo 0 | sudo tee /sys/class/backlight/amdgpu_bl1/bl_power
+echo 255 | sudo tee /sys/class/backlight/amdgpu_bl1/brightness
+```
+
+Reusable helper added:
+
+```bash
+~/.config/qtile/laptop/x13-flow/screen.sh --off
+~/.config/qtile/laptop/x13-flow/screen.sh --on
+~/.config/qtile/laptop/x13-flow/screen.sh --status
+```
+
+State when off should look like:
+
+```text
+brightness=0
+actual_brightness=0
+bl_power=4
+fb0 blank=1
+```
+
+Unlike LightDM/DPMS, a laptop keypress may not restore this sysfs/framebuffer state; SSH restore with `screen.sh --on` is safest. This works for now for tent/headless mode.
+
 ## If it hangs/reboots again
 
 After reboot, collect:
