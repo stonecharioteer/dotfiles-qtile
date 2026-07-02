@@ -2,13 +2,13 @@
 title: Laptop Hang RCA Notes
 host: rog-x13-flow
 initial_date: 2026-06-21
-last_updated: 2026-06-24
+last_updated: 2026-07-02
 os_stack: Linux Mint / Ubuntu
 problem_kernel: 6.8.0-110-generic
 current_mitigation_kernel: 6.8.0-90-generic
 current_status:
-  Stable for more than 1 day on 6.8.0-90-generic; screen keep-off timer installed for headless/tent
-  mode.
+  Running 6.8.0-90-generic after a sudden unclean reboot on 2026-07-02 with no preserved final
+  cause; reboot-investigation tooling prepared.
 key_events:
   - date: 2026-06-21
     summary:
@@ -23,6 +23,10 @@ key_events:
   - date: 2026-06-24
     summary:
       Confirmed more than 1 day stable on 6.8.0-90-generic; added screen keep-off service/timer.
+  - date: 2026-07-02
+    summary:
+      Sudden unclean reboot on 6.8.0-90-generic; no oops/panic/OOM/thermal evidence preserved; added
+      script to enable pstore archival, stronger panic-on-lockup sysctls, and timer dephasing.
 ---
 
 # Laptop Hang RCA Notes
@@ -105,6 +109,100 @@ cleanly.
   laptop is being used in tent/headless mode.
 - This is a Linux/headless-mode workaround, not a firmware-level fix. If the laptop is used
   interactively again, the keep-off behavior should be disabled first.
+
+### 2026-07-02 sudden unclean reboot on `6.8.0-90-generic`
+
+The laptop rebooted unexpectedly while still on the older mitigation kernel:
+
+```text
+Current kernel after reboot: 6.8.0-90-generic
+Previous boot: Wed 2026-07-01 09:46:56 IST → Thu 2026-07-02 13:10:33 IST
+Current boot:  Thu 2026-07-02 13:13:08 IST
+```
+
+`last -x` did not show a clean shutdown before this reboot. A prior SSH session ended with `crash`,
+and the current boot logged:
+
+```text
+systemd-journald: system.journal corrupted or uncleanly shut down, renaming and replacing.
+```
+
+Unlike the earlier `6.8.0-110-generic` incident, the previous boot did not preserve a visible chain
+of kernel oopses. Searches did not find:
+
+```text
+general protection fault
+kernel oops/panic
+kmem_cache_alloc fault
+anon_vma fault
+OOM
+thermal critical event
+clean shutdown target
+explicit reboot request
+```
+
+The previous boot journal stopped abruptly around the recurring one-minute timers:
+
+```text
+Jul 02 13:10:33 systemd[1]: Starting hang-health-snapshot.service - Collect a health snapshot for debugging hangs...
+Jul 02 13:10:33 systemd[1]: Starting x13-screen-off.service - Force ASUS X13 laptop panel off for headless/tent mode...
+Jul 02 13:10:33 systemd[1]: x13-screen-off.service: Deactivated successfully.
+```
+
+The health snapshots immediately before the reboot looked normal:
+
+```text
+snapshot: 2026-07-02T13:09:31+05:30
+uptime: 1 day, 3:24
+load average: 0.09, 0.16, 0.17
+memory: ~28 GiB available, swap 0B used
+root disk: 45% used
+AC online: 1
+battery: 59%, status=Not charging, charge_control_end_threshold=60, power_now=0
+CPU Tctl: ~40.2°C
+AMD GPU edge: ~40.0°C
+NVMe: ~31.9°C
+NVIDIA driver: not running, expected
+recent kernel warnings/errors in health snapshot: none
+```
+
+Interpretation: this was an unclean reboot/reset with no preserved final cause. It is not the same
+signature as the `6.8.0-110-generic` VM/slab oops incident. The leading possibilities are:
+
+1. firmware/hardware reset or power event,
+2. kernel/firmware hang where final logs were not flushed,
+3. panic/reboot path where pstore/kdump did not yet preserve evidence,
+4. less likely: interaction/noise from one-minute health and screen keep-off timers running at the
+   same second.
+
+Mitigation/investigation script added:
+
+```text
+./setup-reboot-investigation.sh
+```
+
+It is intended to be run manually. It prepares evidence capture for the next event by:
+
+- setting diagnostic panic sysctls:
+  - `kernel.panic = 30`
+  - `kernel.panic_on_oops = 1`
+  - `kernel.softlockup_panic = 1`
+  - `kernel.hung_task_panic = 1`
+- mounting/checking `/sys/fs/pstore` when firmware exposes it,
+- installing `archive-pstore.service` to copy pstore records after boot into
+  `/var/log/pstore-archive/`,
+- de-phasing `x13-screen-off.timer` so it does not fire at exactly the same cadence/second as
+  `hang-health-snapshot.timer`,
+- optionally installing kdump tooling with `INSTALL_KDUMP=1 ./setup-reboot-investigation.sh`.
+
+After any future unexpected reboot, check:
+
+```bash
+sudo find /var/log/pstore-archive -maxdepth 2 -type f -print
+sudo grep -R . /var/log/pstore-archive /sys/fs/pstore 2>/dev/null | less
+journalctl -b -1 -k --no-pager | tail -300
+last -x | head -30
+```
 
 ## Initial hypothesis checks
 
