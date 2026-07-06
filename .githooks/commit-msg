@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+message_file="$1"
+subject="$(head -n 1 "$message_file")"
+
+# Allow Git-generated and history-management messages.
+case "$subject" in
+  Merge\ *|Revert\ *|fixup\!*|squash\!*)
+    exit 0
+    ;;
+esac
+
+# Conventional Commits: type(scope)!: subject
+# Examples:
+#   feat: add screen keep-off timer
+#   fix(x13): pin stable kernel
+#   docs!: rewrite RCA
+pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([A-Za-z0-9._/-]+\))?!?: .+'
+
+if [[ ! "$subject" =~ $pattern ]]; then
+  cat >&2 <<EOF
+ERROR: commit message must follow Conventional Commits.
+
+Expected format:
+  type(scope): subject
+
+Allowed types:
+  build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test
+
+Examples:
+  feat: add screen keep-off timer
+  fix(x13): pin stable kernel
+  docs!: rewrite RCA
+
+Actual subject:
+  $subject
+EOF
+  exit 1
+fi

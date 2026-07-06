@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+mapfile -t staged_files < <(git diff --cached --name-only --diff-filter=ACMR)
+
+if [[ ${#staged_files[@]} -eq 0 ]]; then
+  exit 0
+fi
+
+py_files=()
+sh_files=()
+prettier_files=()
+
+is_shell_file() {
+  local file="$1"
+
+  [[ "$file" == *.sh ]] && return 0
+  [[ -r "$file" ]] || return 1
+  head -n 1 "$file" | grep -Eq '^#!.*\b(bash|sh|zsh|fish)\b'
+}
+
+is_prettier_file() {
+  case "$1" in
+    *.css|*.html|*.js|*.jsx|*.json|*.jsonc|*.md|*.mjs|*.cjs|*.ts|*.tsx|*.yaml|*.yml)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+for file in "${staged_files[@]}"; do
+  [[ -f "$file" ]] || continue
+
+  [[ "$file" == *.py ]] && py_files+=("$file")
+  is_shell_file "$file" && sh_files+=("$file")
+  is_prettier_file "$file" && prettier_files+=("$file")
+done
+
+run_ruff() {
+  if command -v uv >/dev/null; then
+    uvx ruff "$@"
+  elif command -v ruff >/dev/null; then
+    ruff "$@"
+  else
+    printf 'ERROR: uv or ruff is required for Python linting/formatting.\n' >&2
+    exit 1
+  fi
+}
+
+run_prettier() {
+  if command -v prettier >/dev/null; then
+    prettier "$@"
+  elif command -v npx >/dev/null; then
+    npx --yes prettier "$@"
+  else
+    printf 'ERROR: prettier or npx is required for formatting.\n' >&2
+    exit 1
+  fi
+}
+
+if [[ ${#py_files[@]} -gt 0 ]]; then
+  printf 'Running ruff format/check on staged Python files...\n'
+  run_ruff format -- "${py_files[@]}"
+  run_ruff check --fix -- "${py_files[@]}"
+  git add -- "${py_files[@]}"
+fi
+
+if [[ ${#prettier_files[@]} -gt 0 ]]; then
+  printf 'Running prettier on staged text files...\n'
+  run_prettier --write -- "${prettier_files[@]}"
+  git add -- "${prettier_files[@]}"
+fi
+
+if [[ ${#sh_files[@]} -gt 0 ]]; then
+  if ! command -v shellcheck >/dev/null; then
+    printf 'ERROR: shellcheck is required for shell linting.\n' >&2
+    exit 1
+  fi
+
+  printf 'Running shellcheck on staged shell files...\n'
+  shellcheck -- "${sh_files[@]}"
+fi
+
+printf 'Pre-commit checks passed.\n'
