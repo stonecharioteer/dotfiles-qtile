@@ -53,6 +53,5 @@ Columns (2px burgundy border) | Tile (2px burgundy border) | Max
 ## Notes
 
 - Volume/brightness keys show notifications with progress bars
-- Battery widget auto-appears on laptops
-- Tablet mode toggle (💻/📱) on ASUS laptops (click icon in top bar)
+- Retired ASUS Flow X13 features are preserved in Git tag `archive/asus-flow-x13`
 - Scratchpads are 80% width × 85% height floating overlays

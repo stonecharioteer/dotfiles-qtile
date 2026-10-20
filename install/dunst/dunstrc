@@ -79,20 +79,3 @@
     frame_color = "#b84d57"
     timeout = 0
     default_icon = dialog-error
-
-# Application-specific rules
-[battery_low]
-    appname = "battery-monitor"
-    urgency = critical
-    background = "#b84d57"
-    foreground = "#ffffff"
-    frame_color = "#ffffff"
-    timeout = 0
-
-[battery_warning]
-    appname = "battery-monitor"
-    urgency = normal
-    background = "#2e3448"
-    foreground = "#d6dae8"
-    frame_color = "#b84d57"
-    timeout = 15
