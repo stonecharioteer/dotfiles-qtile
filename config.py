@@ -8,6 +8,7 @@ import json
 import os
 import subprocess
 import datetime
+import psutil
 from pathlib import Path
 from libqtile.core.manager import Qtile
 from libqtile import bar, layout, widget, hook
@@ -33,6 +34,18 @@ images = {
 }
 mod = "mod4"  # super key is modifier
 terminal = "alacritty"
+
+# Tuned for the usual 32-inch 4K display. Set to 1.0 for the original sizing.
+BAR_SCALE = 4 / 3
+
+
+def scaled(pixels):
+    return round(pixels * BAR_SCALE)
+
+
+BAR_HEIGHT = scaled(36)
+BAR_MARGIN = scaled(5)
+DETAIL_FONT_SIZE = max(10, scaled(12))
 
 
 def get_screenshot_filename():
@@ -422,8 +435,8 @@ layouts = [
 
 widget_defaults = dict(
     font="JetBrainsMono Nerd Font",
-    fontsize=18,
-    padding=3,
+    fontsize=scaled(18),
+    padding=scaled(3),
 )
 extension_defaults = widget_defaults.copy()
 
@@ -466,10 +479,10 @@ def sep(*, foreground=colors["burgandy"], background=None):
     """Returns a custom separator"""
     if background:
         return widget.TextBox(
-            "⋮", foreground=foreground, background=background, padding=10
+            "⋮", foreground=foreground, background=background, padding=scaled(10)
         )
     else:
-        return widget.TextBox("⋮", foreground=foreground, padding=10)
+        return widget.TextBox("⋮", foreground=foreground, padding=scaled(10))
 
 
 def get_ip_address():
@@ -497,62 +510,72 @@ def get_ip_address():
         return "IP: Error"
 
 
+_network_cache = {"ip": "Network unavailable", "ssid": "Wi-Fi unavailable"}
+
+
+def network_query(command):
+    """Return command output, or None on a transient query failure."""
+    from libqtile.log_utils import logger
+
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            return result.stdout.strip()
+        logger.debug("Network query failed: %s: %s", command, result.stderr.strip())
+    except (OSError, subprocess.TimeoutExpired) as error:
+        logger.debug("Network query failed: %s: %s", command, error)
+    return None
+
+
 def get_ip_ssid_info():
-    """Get IP and SSID information stacked"""
-    import subprocess
+    """Read cached Wi-Fi data without scanning; retain good data on query failure."""
     import re
 
-    # Get IP address
-    ip_info = "No connection"
-    try:
-        result = subprocess.run(
-            ["ip", "route", "get", "8.8.8.8"], capture_output=True, text=True, timeout=5
-        )
-        if result.returncode == 0:
-            match = re.search(r"src\s+(\d+\.\d+\.\d+\.\d+)", result.stdout)
-            if match:
-                ip = match.group(1)
-                dev_match = re.search(r"dev\s+(\w+)", result.stdout)
-                interface = dev_match.group(1) if dev_match else "unknown"
-                ip_info = f"{ip} ({interface})"
-    except Exception:
-        ip_info = "Error"
+    route = network_query(["ip", "route", "get", "8.8.8.8"])
+    if route is not None:
+        address = re.search(r"\bsrc\s+(\S+)", route)
+        device = re.search(r"\bdev\s+(\S+)", route)
+        if address and device:
+            _network_cache["ip"] = f"{address[1]} ({device[1]})"
 
-    # Get SSID
-    ssid_info = "No WiFi"
-    try:
-        # Try nmcli first
-        result = subprocess.run(
-            ["nmcli", "-t", "-f", "active,ssid", "dev", "wifi"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        if result.returncode == 0:
-            for line in result.stdout.strip().split("\n"):
-                if line.startswith("yes:"):
-                    ssid = line.split(":", 1)[1]
-                    ssid_info = ssid if ssid else "No SSID"
-                    break
+    wifi = network_query([
+        "nmcli", "--escape", "no", "-t", "-f", "active,ssid",
+        "dev", "wifi", "list", "--rescan", "no",
+    ])
+    ssid = next(
+        (line.split(":", 1)[1] or "Hidden network"
+         for line in (wifi or "").splitlines() if line.startswith("yes:")),
+        None,
+    )
+    if ssid is None:
+        # Try the fallback even when nmcli raised or timed out.
+        ssid = network_query(["iwgetid", "-r"]) or None
+    if ssid is not None:
+        _network_cache["ssid"] = ssid
+    else:
+        # Only replace a known SSID when NetworkManager confirms disconnection.
+        status = network_query(["nmcli", "-t", "-f", "TYPE,STATE", "device", "status"])
+        if status is not None:
+            states = [line.split(":", 1)[1] for line in status.splitlines()
+                      if line.startswith("wifi:")]
+            if states and all(state in {"disconnected", "unavailable"} for state in states):
+                _network_cache["ssid"] = "Disconnected"
 
-        # Fallback to iwgetid if nmcli didn't work
-        if ssid_info == "No WiFi":
-            result = subprocess.run(
-                ["iwgetid", "-r"], capture_output=True, text=True, timeout=5
-            )
-            if result.returncode == 0 and result.stdout.strip():
-                ssid_info = result.stdout.strip()
-    except Exception:
-        ssid_info = "Error"
+    lines = [_network_cache["ip"], _network_cache["ssid"]]
+    width = max(map(len, lines))
+    return "\n".join(line.ljust(width) for line in lines)
 
-    # Calculate padding for left alignment
-    lines = [ip_info, ssid_info]
-    max_length = max(len(line) for line in lines)
 
-    # Pad shorter lines to match the longest line
-    padded_lines = [line.ljust(max_length) for line in lines]
+def human_memory(size):
+    """Format byte counts using whole MiB or one decimal place in GiB."""
+    if size >= 1024 ** 3:
+        return f"{size / 1024 ** 3:.1f} GiB"
+    return f"{size / 1024 ** 2:.0f} MiB"
 
-    return "\n".join(padded_lines)
+
+def get_memory_usage():
+    memory = psutil.virtual_memory()
+    return f"{human_memory(memory.used)} / {human_memory(memory.total)}"
 
 
 def get_hostname():
@@ -568,27 +591,27 @@ def get_hostname():
 def screen(main=False):
     """Returns a default screen with a bar."""
     bottom_widgets = [
-        widget.Image(filename=images["cpu"], margin=8),
+        widget.Image(filename=images["cpu"], margin=scaled(8)),
         widget.ThermalSensor(
             format="{temp:.1f}{unit}",
             tag_sensor="Tctl",
             sensors_chip="k10temp-pci-00c3",
         ),
         sep(),
-        widget.Image(filename=images["gpu"], margin=5),
+        widget.Image(filename=images["gpu"], margin=scaled(5)),
         widget.ThermalSensor(
             format="{temp:.1f}{unit}",
             tag_sensor="edge",
             sensors_chip="amdgpu-pci-1800",
         ),
-        widget.GenPollText(func=get_vram_usage, update_interval=3, fontsize=10)
+        widget.GenPollText(func=get_vram_usage, update_interval=3, fontsize=DETAIL_FONT_SIZE)
         if main
         else widget.Spacer(length=1),
         sep(),
         widget.CPU(),
         sep(),
-        widget.Image(filename=images["ram"], margin=5),
-        widget.Memory(),
+        widget.Image(filename=images["ram"], margin=scaled(5)),
+        widget.GenPollText(func=get_memory_usage, update_interval=2),
     ]
 
     # Add IP address and hostname widgets only for main screen
@@ -597,11 +620,11 @@ def screen(main=False):
             [
                 sep(),
                 widget.GenPollText(
-                    func=get_hostname, update_interval=3600, fontsize=16
+                    func=get_hostname, update_interval=3600, fontsize=scaled(16)
                 ),
                 sep(),
                 widget.GenPollText(
-                    func=get_ip_ssid_info, update_interval=15, fontsize=10
+                    func=get_ip_ssid_info, update_interval=15, fontsize=DETAIL_FONT_SIZE
                 ),
             ]
         )
@@ -613,12 +636,16 @@ def screen(main=False):
         ]
     )
 
-    bottom = bar.Bar(bottom_widgets, 36, margin=5, background=colors["bar"], opacity=1.0)
+    bottom = bar.Bar(bottom_widgets, BAR_HEIGHT, margin=BAR_MARGIN, background=colors["bar"], opacity=1.0)
     top = bar.Bar(
         [
-            widget.Image(filename=images["linux-mint"], margin=5)
+            widget.Image(
+                filename=images["linux-mint"],
+                margin=scaled(5),
+                mouse_callbacks={"Button1": lazy.reload_config()},
+            )
             if main
-            else widget.Image(filename=images["python"], margin=5),
+            else widget.Image(filename=images["python"], margin=scaled(5)),
             sep(),
             widget.TextBox(
                 text="✂️",
@@ -632,8 +659,8 @@ def screen(main=False):
                         ]
                     )
                 },
-                fontsize=20,
-                padding=8,
+                fontsize=scaled(20),
+                padding=scaled(8),
                 background=colors["dark_slate_blue"],
                 foreground="#ffffff",
             ),
@@ -655,17 +682,17 @@ def screen(main=False):
             widget.TaskList(
                 stretch=True,
                 highlight_method="block",
-                max_title_width=250,
+                max_title_width=scaled(250),
             ),
             sep(background=colors["sys_tray"]) if main else widget.Spacer(length=1),
-            widget.Systray(background=colors["sys_tray"])
+            widget.Systray(background=colors["sys_tray"], icon_size=scaled(20), padding=scaled(3))
             if main
             else widget.Spacer(length=1),
             sep(),
             widget.Image(filename=images["straw-hat"]),
         ],
-        36,
-        margin=5,
+        BAR_HEIGHT,
+        margin=BAR_MARGIN,
         background=colors["bar"],
         opacity=1.0,
     )
