@@ -632,7 +632,15 @@ def screen(main=False):
     bottom_widgets.extend(
         [
             widget.Spacer(stretch=True),
-            widget.Clock(format="[%Y-%m-%d %H:%M:%S]"),
+            widget.Clock(
+                format="[%Y-%m-%d %H:%M:%S]",
+                mouse_callbacks={
+                    "Button1": lazy.spawn([
+                        "zenity", "--calendar", "--title=Calendar",
+                        f"--width={scaled(360)}", f"--height={scaled(300)}",
+                    ])
+                },
+            ),
         ]
     )
 
